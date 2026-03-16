@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>homelab.md</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a0e14'/%3E%3Crect x='4' y='6' width='24' height='8' rx='2' fill='%23141b24' stroke='%2339c5bb' stroke-width='1.5'/%3E%3Ccircle cx='8.5' cy='10' r='1.5' fill='%234bc77a'/%3E%3Ccircle cx='13' cy='10' r='1.5' fill='%2339c5bb'/%3E%3Crect x='18' y='9' width='7' height='2' rx='1' fill='%233d4f63'/%3E%3Crect x='4' y='18' width='24' height='8' rx='2' fill='%23141b24' stroke='%2339c5bb' stroke-width='1.5'/%3E%3Ccircle cx='8.5' cy='22' r='1.5' fill='%234bc77a'/%3E%3Ccircle cx='13' cy='22' r='1.5' fill='%2339c5bb'/%3E%3Crect x='18' y='21' width='7' height='2' rx='1' fill='%233d4f63'/%3E%3C/svg%3E">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg-primary: #0a0e14;
+    --bg-secondary: #111820;
+    --bg-tertiary: #1a2130;
+    --bg-card: #141b24;
+    --border: #1e2a3a;
+    --border-active: #2d4a6f;
+    --text-primary: #c8d6e5;
+    --text-secondary: #6b7d93;
+    --text-muted: #3d4f63;
+    --accent: #39c5bb;
+    --accent-dim: #2a9d95;
+    --accent-glow: rgba(57, 197, 187, 0.15);
+    --danger: #e55b5b;
+    --danger-dim: rgba(229, 91, 91, 0.15);
+    --warning: #e5a84b;
+    --success: #4bc77a;
+    --tag-bg: rgba(57, 197, 187, 0.1);
+    --tag-border: rgba(57, 197, 187, 0.25);
+    --purple: #b478e6;
+    --purple-bg: rgba(180, 120, 230, 0.15);
+    --blue: #648ce6;
+    --blue-bg: rgba(100, 140, 230, 0.15);
+    --radius: 6px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.3);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg-primary); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--border-active); }
+
+  .header {
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+  .logo span { color: var(--text-muted); font-weight: 300; }
+
+  .header-actions { display: flex; gap: 8px; }
+
+  .btn {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn:hover { border-color: var(--border-active); background: var(--bg-card); }
+  .btn-primary { background: var(--accent); color: var(--bg-primary); border-color: var(--accent); font-weight: 600; }
+  .btn-primary:hover { background: var(--accent-dim); border-color: var(--accent-dim); }
+  .btn-danger { color: var(--danger); border-color: transparent; background: var(--danger-dim); }
+  .btn-danger:hover { border-color: var(--danger); }
+  .btn-ghost { border-color: transparent; background: transparent; }
+  .btn-ghost:hover { background: var(--bg-tertiary); }
+  .btn-sm { padding: 5px 10px; font-size: 14px; }
+
+  .main { max-width: 1200px; margin: 0 auto; padding: 24px 32px; }
+
+  .toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px; gap: 12px; flex-wrap: wrap;
+  }
+
+  .search-box {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px; padding: 8px 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    width: 320px; outline: none;
+    transition: border-color 0.15s ease;
+  }
+  .search-box::placeholder { color: var(--text-muted); }
+  .search-box:focus { border-color: var(--accent); }
+
+  .filter-group { display: flex; gap: 4px; flex-wrap: wrap; }
+
+  .filter-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer; transition: all 0.15s ease;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .filter-btn:hover { border-color: var(--border-active); color: var(--text-primary); }
+  .filter-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+
+  .stats-bar {
+    display: flex; gap: 24px; margin-bottom: 24px;
+    padding: 14px 20px; background: var(--bg-secondary);
+    border: 1px solid var(--border); border-radius: var(--radius); flex-wrap: wrap;
+  }
+  .stat { display: flex; align-items: baseline; gap: 6px; }
+  .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 700; color: var(--accent); }
+  .stat-label { font-size: 14px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .device-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 14px; }
+
+  .device-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px;
+    transition: all 0.15s ease; cursor: pointer; position: relative;
+  }
+  .device-card:hover { border-color: var(--border-active); box-shadow: var(--shadow); }
+  .device-card.has-children { border-left: 3px solid var(--accent); }
+
+  .device-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+
+  .device-name { font-family: 'JetBrains Mono', monospace; font-size: 17px; font-weight: 600; color: var(--text-primary); }
+
+  .device-type-badge {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    text-transform: uppercase; letter-spacing: 0.8px;
+    padding: 3px 8px; border-radius: 3px; font-weight: 600; white-space: nowrap;
+  }
+  .badge-server { background: rgba(57, 197, 187, 0.15); color: var(--accent); }
+  .badge-vm { background: var(--blue-bg); color: var(--blue); }
+  .badge-container { background: var(--purple-bg); color: var(--purple); }
+  .badge-network { background: rgba(230, 180, 60, 0.15); color: #e6b43c; }
+  .badge-storage { background: rgba(230, 120, 80, 0.15); color: #e67850; }
+  .badge-other { background: rgba(150, 150, 170, 0.15); color: #9696aa; }
+
+  .device-ip { font-family: 'JetBrains Mono', monospace; font-size: 15px; color: var(--accent); margin-bottom: 8px; }
+
+  .device-parent-link { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+  .device-parent-link strong { color: var(--text-secondary); }
+
+  .device-meta { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
+  .meta-item { font-size: 14px; color: var(--text-secondary); }
+  .meta-item strong { color: var(--text-primary); font-weight: 500; }
+
+  .device-services { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+
+  .service-tag {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    padding: 2px 8px; border-radius: 3px;
+    background: var(--tag-bg); border: 1px solid var(--tag-border); color: var(--accent);
+  }
+
+  .child-count-badge {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    padding: 2px 8px; border-radius: 3px;
+    background: var(--blue-bg); color: var(--blue);
+    margin-top: 8px; display: inline-block;
+  }
+
+  .device-status { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+  .status-online { background: var(--success); box-shadow: 0 0 6px rgba(75, 199, 122, 0.4); }
+  .status-offline { background: var(--danger); }
+  .status-unknown { background: var(--text-muted); }
+
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7); z-index: 200;
+    align-items: center; justify-content: center; backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: 8px; width: 85%; max-width: 1000px;
+    max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  .modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 18px 22px; border-bottom: 1px solid var(--border);
+  }
+  .modal-title { font-family: 'JetBrains Mono', monospace; font-size: 17px; font-weight: 600; }
+  .modal-body { padding: 22px; }
+  .modal-footer {
+    display: flex; justify-content: flex-end; gap: 8px;
+    padding: 16px 22px; border-top: 1px solid var(--border);
+  }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .form-row.full { grid-template-columns: 1fr; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+
+  .form-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-secondary);
+  }
+
+  .form-input, .form-select, .form-textarea {
+    font-family: 'JetBrains Mono', monospace; font-size: 15px;
+    padding: 9px 12px; border-radius: var(--radius);
+    border: 1px solid var(--border); background: var(--bg-primary);
+    color: var(--text-primary); outline: none; transition: border-color 0.15s ease;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+  .form-select { cursor: pointer; padding-right: 32px; -webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7d93' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+  .form-select option { background: var(--bg-primary); }
+  .form-textarea { resize: vertical; min-height: 80px; font-family: 'JetBrains Mono', monospace; }
+  .form-hint { font-size: 13px; color: var(--text-muted); }
+
+  .services-editor { margin-top: 4px; }
+
+  .service-entry {
+    display: grid; grid-template-columns: 1fr 70px 1fr 1fr auto;
+    gap: 8px; align-items: center; margin-bottom: 8px;
+  }
+  .storage-entry {
+    display: grid; grid-template-columns: 1fr 80px 1fr auto;
+    gap: 8px; align-items: center; margin-bottom: 8px;
+  }
+  .service-entry .form-input, .storage-entry .form-input { font-size: 14px; padding: 7px 10px; }
+
+  .service-remove {
+    background: none; border: none; color: var(--text-muted);
+    cursor: pointer; font-size: 18px; padding: 4px 8px;
+    border-radius: var(--radius); transition: color 0.15s;
+  }
+  .service-remove:hover { color: var(--danger); }
+
+  .service-add-btn {
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    padding: 6px 12px; border-radius: var(--radius);
+    border: 1px dashed var(--border); background: transparent;
+    color: var(--text-secondary); cursor: pointer; transition: all 0.15s; width: 100%; text-align: center;
+  }
+  .service-add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .service-labels {
+    display: grid; grid-template-columns: 1fr 70px 1fr 1fr auto;
+    gap: 8px; margin-bottom: 6px;
+  }
+  .storage-labels {
+    display: grid; grid-template-columns: 1fr 80px 1fr auto;
+    gap: 8px; margin-bottom: 6px;
+  }
+  .service-labels span, .storage-labels span {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);
+  }
+
+  .detail-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7); z-index: 200;
+    align-items: center; justify-content: center; backdrop-filter: blur(4px);
+  }
+  .detail-overlay.open { display: flex; }
+
+  .detail-panel {
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: 8px; width: 85%; max-width: 1000px;
+    max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  .detail-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding: 22px; border-bottom: 1px solid var(--border);
+  }
+  .detail-body { padding: 22px; }
+  .detail-section { margin-bottom: 20px; }
+
+  .detail-section-title {
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted);
+    margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border);
+  }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .detail-field-label { font-size: 13px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+  .detail-field-value { font-family: 'JetBrains Mono', monospace; font-size: 15px; color: var(--text-primary); }
+  .detail-notes { font-size: 15px; color: var(--text-secondary); line-height: 1.7; white-space: pre-wrap; }
+
+  .detail-actions { display: flex; gap: 8px; padding: 16px 22px; border-top: 1px solid var(--border); }
+
+  .service-table { width: 100%; border-collapse: collapse; }
+  .service-table th {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);
+    text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--border);
+  }
+  .service-table td {
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    padding: 8px 10px; color: var(--text-primary); border-bottom: 1px solid var(--border);
+  }
+  .service-table td.svc-notes { color: var(--text-secondary); font-family: 'IBM Plex Sans', sans-serif; }
+  .service-table tr:last-child td { border-bottom: none; }
+
+  .child-device {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; border: 1px solid var(--border);
+    border-radius: var(--radius); margin-bottom: 6px;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .child-device:hover { border-color: var(--border-active); background: var(--bg-tertiary); }
+  .child-device-name { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 500; }
+  .child-device-info { font-size: 13px; color: var(--text-secondary); }
+
+  .empty-state { text-align: center; padding: 80px 20px; }
+  .empty-icon { font-size: 52px; margin-bottom: 16px; opacity: 0.3; }
+  .empty-title { font-family: 'JetBrains Mono', monospace; font-size: 18px; color: var(--text-secondary); margin-bottom: 8px; }
+  .empty-text { font-size: 15px; color: var(--text-muted); margin-bottom: 20px; }
+
+  .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 300; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    padding: 10px 16px; border-radius: var(--radius);
+    background: var(--bg-tertiary); border: 1px solid var(--border);
+    color: var(--text-primary); box-shadow: var(--shadow); animation: slideIn 0.2s ease;
+  }
+  .toast.success { border-color: var(--success); }
+  .toast.error { border-color: var(--danger); }
+
+  @keyframes slideIn {
+    from { transform: translateX(20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  .confirm-dialog { text-align: center; padding: 12px 0; }
+  .confirm-dialog p { font-size: 16px; color: var(--text-secondary); margin-bottom: 20px; }
+  .confirm-dialog .btn-group { display: flex; justify-content: center; gap: 10px; }
+
+  @media (max-width: 640px) {
+    .header { padding: 12px 16px; }
+    .main { padding: 16px; }
+    .device-grid { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .service-entry { grid-template-columns: 1fr 60px auto; }
+    .service-entry .svc-notes-input { display: none; }
+    .toolbar { flex-direction: column; align-items: stretch; }
+    .search-box { width: 100%; }
+    .stats-bar { flex-wrap: wrap; gap: 16px; }
+    .detail-grid { grid-template-columns: 1fr; }
+  }
+
+  .footer {
+    text-align: center;
+    padding: 24px 16px;
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+  }
+  .footer-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .footer-link:hover { color: var(--accent); }
+
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">homelab<span>.md</span></div>
+  <div class="header-actions">
+    <button class="btn btn-sm" onclick="importMarkdown()" title="Import .md files">↑ Import</button>
+    <button class="btn btn-sm" onclick="exportAll()" title="Export all as .md">↓ Export</button>
+    <button class="btn btn-primary btn-sm" onclick="openAddModal()">+</button>
+  </div>
+</header>
+
+<div class="main">
+  <div class="stats-bar" id="statsBar"></div>
+  <div class="toolbar">
+    <input type="text" class="search-box" id="searchBox" placeholder="Search hostname, IP, service..." oninput="renderDevices()">
+    <div class="filter-group" id="filterGroup"></div>
+  </div>
+  <div class="device-grid" id="deviceGrid"></div>
+</div>
+
+<div class="modal-overlay" id="formModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="formTitle">Add Device</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editId">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Hostname *</label>
+          <input type="text" class="form-input" id="fName" placeholder="e.g. proxmox-01">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Type</label>
+          <select class="form-select" id="fType">
+            <option value="server">Server</option>
+            <option value="vm">Virtual Machine</option>
+            <option value="container">Container / LXC</option>
+            <option value="network">Network Device</option>
+            <option value="storage">Storage</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">IP Address</label>
+          <input type="text" class="form-input" id="fIp" placeholder="e.g. 192.168.1.100">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Host / Parent Device</label>
+          <select class="form-select" id="fParent">
+            <option value="">— None (standalone) —</option>
+          </select>
+          <span class="form-hint">e.g. the Proxmox host this VM runs on</span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">System</label>
+          <input type="text" class="form-input" id="fSystem" placeholder="e.g. Dell PowerEdge R730">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Operating System</label>
+          <input type="text" class="form-input" id="fOs" placeholder="e.g. Proxmox VE 8.1">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-select" id="fStatus">
+            <option value="online">Online</option>
+            <option value="offline">Offline</option>
+            <option value="unknown">Unknown</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Location</label>
+          <input type="text" class="form-input" id="fLocation" placeholder="e.g. Rack 1, Shelf 2">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">CPU</label>
+          <input type="text" class="form-input" id="fCpu" placeholder="e.g. Intel i7-12700K / 8 cores">
+        </div>
+        <div class="form-group">
+          <label class="form-label">RAM</label>
+          <input type="text" class="form-input" id="fRam" placeholder="e.g. 32GB DDR4">
+        </div>
+      </div>
+
+      <div class="form-row full">
+        <div class="form-group">
+          <label class="form-label">Storage</label>
+          <div class="services-editor">
+            <div class="storage-labels">
+              <span>Type / Device</span>
+              <span>Size</span>
+              <span>Notes</span>
+              <span></span>
+            </div>
+            <div id="storageRows"></div>
+            <button type="button" class="service-add-btn" onclick="addStorageRow()">+ Add Storage</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row full">
+        <div class="form-group">
+          <label class="form-label">Services</label>
+          <div class="services-editor" id="servicesEditor">
+            <div class="service-labels">
+              <span>Name</span>
+              <span>Port</span>
+              <span>Notes</span>
+              <span>URL</span>
+              <span></span>
+            </div>
+            <div id="serviceRows"></div>
+            <button type="button" class="service-add-btn" onclick="addServiceRow()">+ Add Service</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row full">
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <textarea class="form-textarea" id="fNotes" placeholder="Any additional notes, credentials references, links..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDevice()">Save Device</button>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <a href="https://github.com/jeremehancock/homelab.md" target="_blank" class="footer-link">homelab.md</a>
+</footer>
+
+<div class="detail-overlay" id="detailOverlay">
+  <div class="detail-panel" id="detailPanel"></div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<input type="file" class="hidden" id="fileInput" accept=".md,.markdown" multiple onchange="handleImport(event)">
+
+<script>
+const STORAGE_KEY = 'homelab_devices';
+
+function loadDevices() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch { return []; }
+}
+function saveDevices(devices) { localStorage.setItem(STORAGE_KEY, JSON.stringify(devices)); }
+function generateId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+function getDevice(id) { return loadDevices().find(d => d.id === id); }
+function getChildren(parentId) { return loadDevices().filter(d => d.parentId === parentId); }
+
+function toast(message, type = 'success') {
+  const container = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = message;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+function getTypeClass(type) {
+  const map = { server: 'badge-server', vm: 'badge-vm', container: 'badge-container', network: 'badge-network', storage: 'badge-storage' };
+  return map[type] || 'badge-other';
+}
+
+function renderStats() {
+  const devices = loadDevices();
+  const online = devices.filter(d => d.status === 'online').length;
+  const hosts = devices.filter(d => !d.parentId).length;
+  const children = devices.filter(d => d.parentId).length;
+  const totalServices = devices.reduce((sum, d) => sum + (d.services ? d.services.length : 0), 0);
+
+  document.getElementById('statsBar').innerHTML = `
+    <div class="stat"><span class="stat-value">${devices.length}</span><span class="stat-label">Devices</span></div>
+    <div class="stat"><span class="stat-value">${online}</span><span class="stat-label">Online</span></div>
+    <div class="stat"><span class="stat-value">${hosts}</span><span class="stat-label">Hosts</span></div>
+    <div class="stat"><span class="stat-value">${children}</span><span class="stat-label">VMs/LXCs</span></div>
+    <div class="stat"><span class="stat-value">${totalServices}</span><span class="stat-label">Services</span></div>
+  `;
+}
+
+function renderFilters() {
+  const devices = loadDevices();
+  const types = ['all', ...new Set(devices.map(d => d.type))];
+  document.getElementById('filterGroup').innerHTML = types.map(t =>
+    `<button class="filter-btn ${t === (currentFilter || 'all') ? 'active' : ''}" onclick="setFilter('${t}')">${t}</button>`
+  ).join('');
+}
+
+let currentFilter = 'all';
+function setFilter(f) { currentFilter = f; renderFilters(); renderDevices(); }
+
+function renderDevices() {
+  const devices = loadDevices();
+  const query = document.getElementById('searchBox').value.toLowerCase();
+
+  let filtered = devices.filter(d => {
+    if (currentFilter !== 'all' && d.type !== currentFilter) return false;
+    if (query) {
+      const svcText = (d.services || []).map(s => typeof s === 'string' ? s : `${s.name} ${s.port} ${s.notes} ${s.url}`).join(' ');
+      const storageText = Array.isArray(d.storage) ? d.storage.map(s => `${s.type} ${s.size} ${s.notes}`).join(' ') : (d.storage || '');
+      const searchable = [d.name, d.ip, d.os, d.system, d.type, d.location, d.notes, svcText, storageText].join(' ').toLowerCase();
+      return searchable.includes(query);
+    }
+    return true;
+  });
+
+  const grid = document.getElementById('deviceGrid');
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1;">
+        <div class="empty-icon">⬡</div>
+        <div class="empty-title">${devices.length === 0 ? 'No devices yet' : 'No matches'}</div>
+        <div class="empty-text">${devices.length === 0 ? 'Add your first homelab device to get started.' : 'Try adjusting your search or filter.'}</div>
+        ${devices.length === 0 ? '<button class="btn btn-primary" onclick="openAddModal()">+ Add Device</button>' : ''}
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(d => {
+    const children = getChildren(d.id);
+    const parent = d.parentId ? getDevice(d.parentId) : null;
+    const svcs = (d.services || []);
+    const svcCount = svcs.length;
+
+    return `
+    <div class="device-card ${children.length ? 'has-children' : ''}" onclick="showDetail('${d.id}')">
+      <div class="device-card-header">
+        <div>
+          <div class="device-name">
+            <span class="device-status status-${d.status || 'unknown'}"></span>
+            ${esc(d.name)}
+          </div>
+        </div>
+        <span class="device-type-badge ${getTypeClass(d.type)}">${esc(d.type)}</span>
+      </div>
+      ${parent ? `<div class="device-parent-link">on <strong>${esc(parent.name)}</strong></div>` : ''}
+      ${d.ip ? `<div class="device-ip">${esc(d.ip)}</div>` : ''}
+      <div class="device-meta">
+        ${d.system ? `<span class="meta-item"><strong>System:</strong> ${esc(d.system)}</span>` : ''}
+        ${d.os ? `<span class="meta-item"><strong>OS:</strong> ${esc(d.os)}</span>` : ''}
+        ${d.cpu ? `<span class="meta-item"><strong>CPU:</strong> ${esc(d.cpu)}</span>` : ''}
+        ${d.ram ? `<span class="meta-item"><strong>RAM:</strong> ${esc(d.ram)}</span>` : ''}
+        ${d.storage && (Array.isArray(d.storage) ? d.storage.length : d.storage) ? `<span class="meta-item"><strong>Storage:</strong> ${Array.isArray(d.storage) ? d.storage.map(s => esc(s.size ? s.type + ' ' + s.size : s.type)).join(', ') : esc(d.storage)}</span>` : ''}
+      </div>
+      ${svcCount ? `
+        <div class="device-services">
+          ${svcs.slice(0, 5).map(s => {
+            const name = typeof s === 'string' ? s : s.name;
+            const port = typeof s === 'string' ? '' : s.port;
+            return `<span class="service-tag">${esc(name)}${port ? ':' + esc(port) : ''}</span>`;
+          }).join('')}
+          ${svcCount > 5 ? `<span class="service-tag">+${svcCount - 5}</span>` : ''}
+        </div>
+      ` : ''}
+      ${children.length ? `<span class="child-count-badge">${children.length} ${children.length === 1 ? 'child' : 'children'}</span>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function esc(str) {
+  if (!str) return '';
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+// Service row management
+let serviceRowData = [];
+
+function renderServiceRows() {
+  document.getElementById('serviceRows').innerHTML = serviceRowData.map((s, i) => `
+    <div class="service-entry">
+      <input type="text" class="form-input" placeholder="e.g. nginx" value="${esc(s.name)}" onchange="serviceRowData[${i}].name=this.value">
+      <input type="text" class="form-input" placeholder="80" value="${esc(s.port)}" onchange="serviceRowData[${i}].port=this.value">
+      <input type="text" class="form-input" placeholder="e.g. reverse proxy" value="${esc(s.notes)}" onchange="serviceRowData[${i}].notes=this.value">
+      <input type="text" class="form-input" placeholder="https://..." value="${esc(s.url)}" onchange="serviceRowData[${i}].url=this.value">
+      <button type="button" class="service-remove" onclick="removeServiceRow(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function addServiceRow(name = '', port = '', notes = '', url = '') {
+  serviceRowData.push({ name, port, notes, url });
+  renderServiceRows();
+}
+
+function removeServiceRow(i) {
+  serviceRowData.splice(i, 1);
+  renderServiceRows();
+}
+
+// Storage row management
+let storageRowData = [];
+
+function renderStorageRows() {
+  document.getElementById('storageRows').innerHTML = storageRowData.map((s, i) => `
+    <div class="storage-entry">
+      <input type="text" class="form-input" placeholder="e.g. NVMe SSD" value="${esc(s.type)}" onchange="storageRowData[${i}].type=this.value">
+      <input type="text" class="form-input" placeholder="1TB" value="${esc(s.size)}" onchange="storageRowData[${i}].size=this.value">
+      <input type="text" class="form-input" placeholder="e.g. Samsung 980 Pro, /dev/sda" value="${esc(s.notes)}" onchange="storageRowData[${i}].notes=this.value">
+      <button type="button" class="service-remove" onclick="removeStorageRow(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function addStorageRow(type = '', size = '', notes = '') {
+  storageRowData.push({ type, size, notes });
+  renderStorageRows();
+}
+
+function removeStorageRow(i) {
+  storageRowData.splice(i, 1);
+  renderStorageRows();
+}
+
+function populateParentDropdown(excludeId = null) {
+  const select = document.getElementById('fParent');
+  const devices = loadDevices();
+  select.innerHTML = '<option value="">— None (standalone) —</option>';
+  devices.filter(d => d.id !== excludeId).forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d.id;
+    opt.textContent = `${d.name} (${d.type})`;
+    select.appendChild(opt);
+  });
+}
+
+function openAddModal() {
+  document.getElementById('formTitle').textContent = 'Add Device';
+  document.getElementById('editId').value = '';
+  clearForm();
+  populateParentDropdown();
+  document.getElementById('formModal').classList.add('open');
+}
+
+function openEditModal(id) {
+  const devices = loadDevices();
+  const d = devices.find(x => x.id === id);
+  if (!d) return;
+
+  document.getElementById('formTitle').textContent = 'Edit Device';
+  document.getElementById('editId').value = id;
+  document.getElementById('fName').value = d.name || '';
+  document.getElementById('fType').value = d.type || 'server';
+  document.getElementById('fIp').value = d.ip || '';
+  document.getElementById('fSystem').value = d.system || '';
+  document.getElementById('fOs').value = d.os || '';
+  document.getElementById('fStatus').value = d.status || 'unknown';
+  document.getElementById('fCpu').value = d.cpu || '';
+  document.getElementById('fRam').value = d.ram || '';
+  document.getElementById('fLocation').value = d.location || '';
+  document.getElementById('fNotes').value = d.notes || '';
+
+  populateParentDropdown(id);
+  document.getElementById('fParent').value = d.parentId || '';
+
+  // Load storage
+  if (Array.isArray(d.storage)) {
+    storageRowData = d.storage.map(s => ({ ...s }));
+  } else if (d.storage) {
+    storageRowData = [{ type: d.storage, size: '', notes: '' }];
+  } else {
+    storageRowData = [];
+  }
+  renderStorageRows();
+
+  serviceRowData = (d.services || []).map(s =>
+    typeof s === 'string' ? { name: s, port: '', notes: '', url: '' } : { name: s.name || '', port: s.port || '', notes: s.notes || '', url: s.url || '' }
+  );
+  renderServiceRows();
+
+  document.getElementById('formModal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('formModal').classList.remove('open'); }
+
+function clearForm() {
+  ['fName','fIp','fSystem','fOs','fCpu','fRam','fLocation','fNotes'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('fType').value = 'server';
+  document.getElementById('fStatus').value = 'online';
+  document.getElementById('fParent').value = '';
+  serviceRowData = [];
+  renderServiceRows();
+  storageRowData = [];
+  renderStorageRows();
+}
+
+function saveDevice() {
+  const name = document.getElementById('fName').value.trim();
+  if (!name) { toast('Hostname is required', 'error'); return; }
+
+  const services = serviceRowData.filter(s => s.name.trim()).map(s => ({
+    name: s.name.trim(), port: s.port.trim(), notes: s.notes.trim(), url: s.url.trim()
+  }));
+
+  const storage = storageRowData.filter(s => s.type.trim()).map(s => ({
+    type: s.type.trim(), size: s.size.trim(), notes: s.notes.trim()
+  }));
+
+  const device = {
+    name,
+    type: document.getElementById('fType').value,
+    ip: document.getElementById('fIp').value.trim(),
+    parentId: document.getElementById('fParent').value || null,
+    system: document.getElementById('fSystem').value.trim(),
+    os: document.getElementById('fOs').value.trim(),
+    status: document.getElementById('fStatus').value,
+    cpu: document.getElementById('fCpu').value.trim(),
+    ram: document.getElementById('fRam').value.trim(),
+    storage,
+    location: document.getElementById('fLocation').value.trim(),
+    services,
+    notes: document.getElementById('fNotes').value.trim(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  const devices = loadDevices();
+  const editId = document.getElementById('editId').value;
+
+  if (editId) {
+    const idx = devices.findIndex(d => d.id === editId);
+    if (idx !== -1) {
+      device.id = editId;
+      device.createdAt = devices[idx].createdAt;
+      devices[idx] = device;
+    }
+    toast(`${name} updated`);
+  } else {
+    device.id = generateId();
+    device.createdAt = device.updatedAt;
+    devices.push(device);
+    toast(`${name} added`);
+  }
+
+  saveDevices(devices);
+  closeModal();
+  refresh();
+}
+
+function showDetail(id) {
+  const devices = loadDevices();
+  const d = devices.find(x => x.id === id);
+  if (!d) return;
+
+  const children = getChildren(d.id);
+  const parent = d.parentId ? getDevice(d.parentId) : null;
+
+  const panel = document.getElementById('detailPanel');
+  panel.innerHTML = `
+    <div class="detail-header">
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;margin-bottom:4px;">
+          <span class="device-status status-${d.status || 'unknown'}"></span>
+          ${esc(d.name)}
+        </div>
+        <span class="device-type-badge ${getTypeClass(d.type)}" style="display:inline-block;">${esc(d.type)}</span>
+        ${parent ? `<span style="font-size:14px;color:var(--text-secondary);margin-left:10px;">on <strong>${esc(parent.name)}</strong></span>` : ''}
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="closeDetail()">✕</button>
+    </div>
+    <div class="detail-body">
+      <div class="detail-section">
+        <div class="detail-section-title">Overview</div>
+        <div class="detail-grid">
+          <div><div class="detail-field-label">IP Address</div><div class="detail-field-value">${esc(d.ip) || '—'}</div></div>
+          <div><div class="detail-field-label">System</div><div class="detail-field-value">${esc(d.system) || '—'}</div></div>
+          <div><div class="detail-field-label">OS</div><div class="detail-field-value">${esc(d.os) || '—'}</div></div>
+          <div><div class="detail-field-label">Status</div><div class="detail-field-value">${esc(d.status) || '—'}</div></div>
+        </div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-section-title">Hardware</div>
+        <div class="detail-grid">
+          <div><div class="detail-field-label">CPU</div><div class="detail-field-value">${esc(d.cpu) || '—'}</div></div>
+          <div><div class="detail-field-label">RAM</div><div class="detail-field-value">${esc(d.ram) || '—'}</div></div>
+          <div><div class="detail-field-label">Location</div><div class="detail-field-value">${esc(d.location) || '—'}</div></div>
+        </div>
+      </div>
+      ${(Array.isArray(d.storage) && d.storage.length) || (!Array.isArray(d.storage) && d.storage) ? `
+        <div class="detail-section">
+          <div class="detail-section-title">Storage (${Array.isArray(d.storage) ? d.storage.length : 1})</div>
+          ${Array.isArray(d.storage) ? `
+            <table class="service-table">
+              <thead><tr><th>Type / Device</th><th>Size</th><th>Notes</th></tr></thead>
+              <tbody>
+                ${d.storage.map(s => `<tr>
+                  <td>${esc(s.type)}</td>
+                  <td>${esc(s.size) || '—'}</td>
+                  <td class="svc-notes">${esc(s.notes || '—')}</td>
+                </tr>`).join('')}
+              </tbody>
+            </table>
+          ` : `<div class="detail-field-value">${esc(d.storage)}</div>`}
+        </div>
+      ` : ''}
+      ${d.services && d.services.length ? `
+        <div class="detail-section">
+          <div class="detail-section-title">Services (${d.services.length})</div>
+          <table class="service-table">
+            <thead><tr><th>Service</th><th>Port</th><th>Notes</th><th>URL</th></tr></thead>
+            <tbody>
+              ${d.services.map(s => {
+                const sName = typeof s === 'string' ? s : s.name;
+                const sPort = typeof s === 'string' ? '' : s.port;
+                const sNotes = typeof s === 'string' ? '' : s.notes;
+                const sUrl = typeof s === 'string' ? '' : (s.url || '');
+                return `<tr>
+                  <td>${esc(sName)}</td>
+                  <td>${esc(sPort) || '—'}</td>
+                  <td class="svc-notes">${esc(sNotes || '—')}</td>
+                  <td>${sUrl ? `<a href="${esc(sUrl)}" target="_blank" style="color:var(--accent);text-decoration:none;">${esc(sUrl)}</a>` : '—'}</td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      ` : ''}
+      ${children.length ? `
+        <div class="detail-section">
+          <div class="detail-section-title">Running on this host (${children.length})</div>
+          ${children.map(c => `
+            <div class="child-device" onclick="event.stopPropagation(); showDetail('${c.id}')">
+              <div>
+                <div class="child-device-name">
+                  <span class="device-status status-${c.status || 'unknown'}"></span>
+                  ${esc(c.name)}
+                </div>
+                <div class="child-device-info">${esc(c.type)}${c.ip ? ' · ' + esc(c.ip) : ''}${c.services && c.services.length ? ' · ' + c.services.length + ' services' : ''}</div>
+              </div>
+              <span class="device-type-badge ${getTypeClass(c.type)}">${esc(c.type)}</span>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+      ${parent ? `
+        <div class="detail-section">
+          <div class="detail-section-title">Host</div>
+          <div class="child-device" onclick="event.stopPropagation(); showDetail('${parent.id}')">
+            <div>
+              <div class="child-device-name">
+                <span class="device-status status-${parent.status || 'unknown'}"></span>
+                ${esc(parent.name)}
+              </div>
+              <div class="child-device-info">${esc(parent.type)}${parent.ip ? ' · ' + esc(parent.ip) : ''}</div>
+            </div>
+            <span class="device-type-badge ${getTypeClass(parent.type)}">${esc(parent.type)}</span>
+          </div>
+        </div>
+      ` : ''}
+      ${d.notes ? `
+        <div class="detail-section">
+          <div class="detail-section-title">Notes</div>
+          <div class="detail-notes">${esc(d.notes)}</div>
+        </div>
+      ` : ''}
+      <div style="font-size:13px;color:var(--text-muted);margin-top:16px;">
+        Created: ${d.createdAt ? new Date(d.createdAt).toLocaleString() : '—'}
+        · Updated: ${d.updatedAt ? new Date(d.updatedAt).toLocaleString() : '—'}
+      </div>
+    </div>
+    <div class="detail-actions">
+      <button class="btn btn-sm" onclick="closeDetail(); openEditModal('${d.id}')">Edit</button>
+      <button class="btn btn-danger btn-sm" onclick="confirmDelete('${d.id}')">Delete</button>
+    </div>
+  `;
+  document.getElementById('detailOverlay').classList.add('open');
+}
+
+function closeDetail() { document.getElementById('detailOverlay').classList.remove('open'); }
+
+function confirmDelete(id) {
+  const devices = loadDevices();
+  const d = devices.find(x => x.id === id);
+  if (!d) return;
+  const children = getChildren(id);
+
+  document.getElementById('detailPanel').innerHTML = `
+    <div class="modal-header">
+      <div class="modal-title">Confirm Delete</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeDetail()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="confirm-dialog">
+        <p>Delete <strong>${esc(d.name)}</strong>?${children.length ? ` This will unlink ${children.length} child device${children.length > 1 ? 's' : ''}.` : ''} This cannot be undone.</p>
+        <div class="btn-group">
+          <button class="btn" onclick="closeDetail()">Cancel</button>
+          <button class="btn btn-danger" onclick="deleteDevice('${id}')">Delete</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function deleteDevice(id) {
+  let devices = loadDevices();
+  const d = devices.find(x => x.id === id);
+  devices.forEach(c => { if (c.parentId === id) c.parentId = null; });
+  devices = devices.filter(x => x.id !== id);
+  saveDevices(devices);
+  closeDetail();
+  toast(`${d?.name || 'Device'} deleted`);
+  refresh();
+}
+
+// Markdown export/import
+function deviceToMarkdown(d, allDevices) {
+  let md = `# ${d.name}\n\n`;
+  const parent = d.parentId ? allDevices.find(x => x.id === d.parentId) : null;
+
+  md += `- **Type:** ${d.type || '—'}\n`;
+  md += `- **Status:** ${d.status || '—'}\n`;
+  md += `- **IP Address:** ${d.ip || '—'}\n`;
+  md += `- **System:** ${d.system || '—'}\n`;
+  md += `- **OS:** ${d.os || '—'}\n`;
+  md += `- **CPU:** ${d.cpu || '—'}\n`;
+  md += `- **RAM:** ${d.ram || '—'}\n`;
+  if (Array.isArray(d.storage) && d.storage.length) {
+    md += `\n## Storage\n\n`;
+    md += `| Type / Device | Size | Notes |\n`;
+    md += `|---------------|------|-------|\n`;
+    d.storage.forEach(s => {
+      md += `| ${s.type || '—'} | ${s.size || '—'} | ${s.notes || '—'} |\n`;
+    });
+    md += `\n`;
+  } else if (d.storage && !Array.isArray(d.storage)) {
+    md += `- **Storage:** ${d.storage}\n`;
+  }
+  md += `- **Location:** ${d.location || '—'}\n`;
+  if (parent) md += `- **Host:** ${parent.name}\n`;
+
+  if (d.services && d.services.length) {
+    md += `\n## Services\n\n`;
+    md += `| Service | Port | Notes | URL |\n`;
+    md += `|---------|------|-------|-----|\n`;
+    d.services.forEach(s => {
+      if (typeof s === 'string') { md += `| ${s} | — | — | — |\n`; }
+      else { md += `| ${s.name || '—'} | ${s.port || '—'} | ${s.notes || '—'} | ${s.url || '—'} |\n`; }
+    });
+  }
+
+  const children = allDevices.filter(c => c.parentId === d.id);
+  if (children.length) {
+    md += `\n## Running on this host\n\n`;
+    children.forEach(c => { md += `- **${c.name}** (${c.type})${c.ip ? ' — ' + c.ip : ''}\n`; });
+  }
+
+  if (d.notes) md += `\n## Notes\n\n${d.notes}\n`;
+
+  md += `\n---\n`;
+  md += `*Created: ${d.createdAt || '—'} | Updated: ${d.updatedAt || '—'} | ID: ${d.id}${d.parentId ? ' | ParentID: ' + d.parentId : ''}*\n`;
+  return md;
+}
+
+function markdownToDevice(md) {
+  const device = { id: generateId(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), services: [], storage: [] };
+
+  const nameMatch = md.match(/^#\s+(.+)$/m);
+  if (nameMatch) device.name = nameMatch[1].trim();
+
+  const fieldMap = {
+    'Type': 'type', 'Status': 'status', 'IP Address': 'ip', 'System': 'system',
+    'OS': 'os', 'CPU': 'cpu', 'RAM': 'ram', 'Location': 'location',
+    'Host': '_parentName'
+  };
+
+  for (const [label, key] of Object.entries(fieldMap)) {
+    const regex = new RegExp(`-\\s+\\*\\*${label}:\\*\\*\\s*(.+)`, 'i');
+    const match = md.match(regex);
+    if (match && match[1].trim() !== '—') device[key] = match[1].trim();
+  }
+
+  // Parse storage table
+  const storageTableMatch = md.match(/## Storage\s*\n[\s\S]*?\n\|[-\s|]+\|\n([\s\S]*?)(?=\n##|\n---|\n*$)/);
+  if (storageTableMatch) {
+    device.storage = storageTableMatch[1].split('\n').filter(l => l.trim().startsWith('|')).map(l => {
+      const cells = l.split('|').map(c => c.trim()).filter(Boolean);
+      return { type: cells[0] || '', size: cells[1] === '—' ? '' : (cells[1] || ''), notes: cells[2] === '—' ? '' : (cells[2] || '') };
+    }).filter(s => s.type);
+  } else {
+    // Fallback: old single-line storage field
+    const oldStorageMatch = md.match(/-\s+\*\*Storage:\*\*\s*(.+)/i);
+    if (oldStorageMatch && oldStorageMatch[1].trim() !== '—') {
+      device.storage = [{ type: oldStorageMatch[1].trim(), size: '', notes: '' }];
+    } else {
+      device.storage = [];
+    }
+  }
+
+  const tableMatch = md.match(/## Services\s*\n[\s\S]*?\n\|[-\s|]+\|\n([\s\S]*?)(?=\n##|\n---|\n*$)/);
+  if (tableMatch) {
+    device.services = tableMatch[1].split('\n').filter(l => l.trim().startsWith('|')).map(l => {
+      const cells = l.split('|').map(c => c.trim()).filter(Boolean);
+      return { name: cells[0] || '', port: cells[1] === '—' ? '' : (cells[1] || ''), notes: cells[2] === '—' ? '' : (cells[2] || ''), url: cells[3] === '—' ? '' : (cells[3] || '') };
+    }).filter(s => s.name);
+  }
+
+  if (!device.services.length) {
+    const oldMatch = md.match(/## Services\s*\n([\s\S]*?)(?=\n##|\n---|\n*$)/);
+    if (oldMatch) {
+      device.services = oldMatch[1].split('\n')
+        .map(l => l.replace(/^-\s*/, '').trim()).filter(Boolean).filter(l => !l.startsWith('|'))
+        .map(s => ({ name: s, port: '', notes: '', url: '' }));
+    }
+  }
+
+  const notesMatch = md.match(/## Notes\s*\n([\s\S]*?)(?=\n---|\n*$)/);
+  if (notesMatch) device.notes = notesMatch[1].trim();
+
+  const idMatch = md.match(/ID:\s*([a-z0-9]+)/);
+  if (idMatch) device.id = idMatch[1];
+
+  const parentIdMatch = md.match(/ParentID:\s*([a-z0-9]+)/);
+  if (parentIdMatch) device.parentId = parentIdMatch[1];
+
+  return device;
+}
+
+function downloadFile(filename, content) {
+  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportAll() {
+  const devices = loadDevices();
+  if (!devices.length) { toast('No devices to export', 'error'); return; }
+
+  let combined = `# Homelab Inventory\n\n`;
+  combined += `> Exported ${new Date().toLocaleString()} — ${devices.length} devices\n\n---\n\n`;
+  devices.forEach(d => { combined += deviceToMarkdown(d, devices) + '\n'; });
+
+  downloadFile('homelab.md', combined);
+  toast(`Exported ${devices.length} devices`);
+}
+
+function importMarkdown() { document.getElementById('fileInput').click(); }
+
+function handleImport(event) {
+  const files = event.target.files;
+  if (!files.length) return;
+
+  let imported = 0;
+  const devices = [];
+
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const sections = e.target.result.split(/(?=^# [^#])/m).filter(s => s.trim());
+
+      sections.forEach(section => {
+        if (section.startsWith('# Homelab Inventory')) return;
+        const device = markdownToDevice(section);
+        if (device.name) {
+          devices.push(device);
+          imported++;
+        }
+      });
+
+      devices.forEach(d => {
+        if (d._parentName && !d.parentId) {
+          const parent = devices.find(p => p.name === d._parentName);
+          if (parent) d.parentId = parent.id;
+          delete d._parentName;
+        }
+      });
+
+      saveDevices(devices);
+      refresh();
+      toast(`Imported ${imported} device${imported !== 1 ? 's' : ''}`);
+    };
+    reader.readAsText(file);
+  });
+  event.target.value = '';
+}
+
+function refresh() { renderStats(); renderFilters(); renderDevices(); }
+
+document.getElementById('formModal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('formModal')) closeModal();
+});
+document.getElementById('detailOverlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('detailOverlay')) closeDetail();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { closeModal(); closeDetail(); }
+});
+
+refresh();
+</script>
+</body>
+</html>
