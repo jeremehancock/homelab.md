@@ -29,18 +29,21 @@ homelab.md gives you a clean interface to catalog every device in your homelab: 
 4. Fill in the details — hostname, type, IP, system, OS, CPU, RAM, storage, services, notes
 5. For VMs and containers, use the **Host / Parent Device** dropdown to link them to their host
 6. Click **↓ Export** to save your data as `homelab.md`
-7. To reload your data later, click **↑ Import** and select your `homelab.md` file
+
+### How Data Is Stored
+
+While you're working, your data lives in the browser's `localStorage`. This means your changes persist between page refreshes and browser restarts without needing to do anything. However, `localStorage` is tied to your browser and can be cleared at any time, so it should not be treated as permanent storage.
+
+The `homelab.md` file is the source of truth. Anytime you make changes through the UI, you should export to save those changes back to the file. If you ever need to ensure your current session matches the file (for example, after editing the `.md` file directly in a text editor, or opening the app in a different browser), click **↑ Import** and select your `homelab.md` file. Importing fully replaces whatever is in `localStorage` with the contents of the file.
 
 ### Workflow
 
 The intended workflow is:
 
-1. **Import** your `homelab.md` to load your lab into the UI
+1. **Import** your `homelab.md` if you need to sync the UI with the file
 2. **Make changes** — add devices, update services, etc.
 3. **Export** to save everything back to `homelab.md`
 4. **Commit** the file to Git if you want version history
-
-Importing always replaces the current session with the contents of the file. The `.md` file is the source of truth, not the browser's localStorage.
 
 ### The Markdown File
 
