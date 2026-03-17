@@ -664,16 +664,16 @@ function renderDevices() {
         ${d.os ? `<span class="meta-item"><strong>OS:</strong> ${esc(d.os)}</span>` : ''}
         ${d.cpu ? `<span class="meta-item"><strong>CPU:</strong> ${esc(d.cpu)}</span>` : ''}
         ${d.ram ? `<span class="meta-item"><strong>RAM:</strong> ${esc(d.ram)}</span>` : ''}
-        ${d.storage && (Array.isArray(d.storage) ? d.storage.length : d.storage) ? `<span class="meta-item"><strong>Storage:</strong> ${Array.isArray(d.storage) ? d.storage.map(s => esc(s.size ? s.type + ' ' + s.size : s.type)).join(', ') : esc(d.storage)}</span>` : ''}
+        ${d.storage && (Array.isArray(d.storage) ? d.storage.length : d.storage) ? `<span class="meta-item"><strong>Storage:</strong> ${Array.isArray(d.storage) ? (d.storage.length > 2 ? esc(d.storage[0].size ? d.storage[0].type + ' ' + d.storage[0].size : d.storage[0].type) + ', +' + (d.storage.length - 1) + ' more' : d.storage.map(s => esc(s.size ? s.type + ' ' + s.size : s.type)).join(', ')) : esc(d.storage)}</span>` : ''}
       </div>
       ${svcCount ? `
         <div class="device-services">
-          ${svcs.slice(0, 5).map(s => {
+          ${svcs.slice(0, 2).map(s => {
             const name = typeof s === 'string' ? s : s.name;
             const port = typeof s === 'string' ? '' : s.port;
             return `<span class="service-tag">${esc(name)}${port ? ':' + esc(port) : ''}</span>`;
           }).join('')}
-          ${svcCount > 5 ? `<span class="service-tag">+${svcCount - 5}</span>` : ''}
+          ${svcCount > 2 ? `<span class="service-tag">+${svcCount - 2} more</span>` : ''}
         </div>
       ` : ''}
       ${children.length ? `<span class="child-count-badge">${children.length} ${children.length === 1 ? 'child' : 'children'}</span>` : ''}
