@@ -624,6 +624,8 @@ function renderDevices() {
     return true;
   });
 
+  filtered.sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' }));
+
   const grid = document.getElementById('deviceGrid');
 
   if (filtered.length === 0) {
