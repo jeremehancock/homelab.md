@@ -140,7 +140,7 @@
   .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 700; color: var(--accent); }
   .stat-label { font-size: 14px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
 
-  .device-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 14px; align-items: start; }
+  .device-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 14px; }
 
   .device-card {
     background: var(--bg-card); border: 1px solid var(--border);
@@ -668,12 +668,12 @@ function renderDevices() {
       </div>
       ${svcCount ? `
         <div class="device-services">
-          ${svcs.slice(0, 3).map(s => {
+          ${svcs.slice(0, 2).map(s => {
             const name = typeof s === 'string' ? s : s.name;
             const port = typeof s === 'string' ? '' : s.port;
             return `<span class="service-tag">${esc(name)}${port ? ':' + esc(port) : ''}</span>`;
           }).join('')}
-          ${svcCount > 3 ? `<span class="service-tag">+${svcCount - 3} more</span>` : ''}
+          ${svcCount > 2 ? `<span class="service-tag">+${svcCount - 2} more</span>` : ''}
         </div>
       ` : ''}
       ${children.length ? `<span class="child-count-badge">${children.length} ${children.length === 1 ? 'child' : 'children'}</span>` : ''}
