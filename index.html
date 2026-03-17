@@ -1212,9 +1212,7 @@ function handleImport(event) {
 
 function refresh() { renderStats(); renderFilters(); renderDevices(); }
 
-document.getElementById('formModal').addEventListener('click', (e) => {
-  if (e.target === document.getElementById('formModal')) closeModal();
-});
+// formModal: no outside-click-to-close to prevent accidental data loss
 document.getElementById('detailOverlay').addEventListener('click', (e) => {
   if (e.target === document.getElementById('detailOverlay')) closeDetail();
 });
