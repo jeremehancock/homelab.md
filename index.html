@@ -363,6 +363,7 @@
   }
   .toast.removing { animation: fadeOut 0.3s ease forwards; }
 
+  .detail-panel.confirm-panel { max-width: 460px; }
   .confirm-dialog { text-align: center; padding: 12px 0; }
   .confirm-dialog p { font-size: 16px; color: var(--text-secondary); margin-bottom: 20px; }
   .confirm-dialog .btn-group { display: flex; justify-content: center; gap: 10px; }
@@ -623,6 +624,8 @@ function renderDevices() {
     }
     return true;
   });
+
+  filtered.sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' }));
 
   const grid = document.getElementById('deviceGrid');
 
@@ -1000,7 +1003,7 @@ function showDetail(id) {
   document.getElementById('detailOverlay').classList.add('open');
 }
 
-function closeDetail() { document.getElementById('detailOverlay').classList.remove('open'); }
+function closeDetail() { document.getElementById('detailPanel').classList.remove('confirm-panel'); document.getElementById('detailOverlay').classList.remove('open'); }
 
 function confirmDelete(id) {
   const devices = loadDevices();
@@ -1008,7 +1011,9 @@ function confirmDelete(id) {
   if (!d) return;
   const children = getChildren(id, devices);
 
-  document.getElementById('detailPanel').innerHTML = `
+  const panel = document.getElementById('detailPanel');
+  panel.classList.add('confirm-panel');
+  panel.innerHTML = `
     <div class="modal-header">
       <div class="modal-title">Confirm Delete</div>
       <button class="btn btn-ghost btn-sm" onclick="closeDetail()">✕</button>
