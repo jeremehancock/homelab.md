@@ -407,7 +407,7 @@
 <div class="main">
   <div class="stats-bar" id="statsBar"></div>
   <div class="toolbar">
-    <input type="text" class="search-box" id="searchBox" placeholder="Search hostname, IP, service..." oninput="renderDevices()">
+    <input type="text" class="search-box" id="searchBox" placeholder="Search hostname, name, IP, service..." oninput="renderDevices()">
     <div class="filter-group" id="filterGroup"></div>
   </div>
   <div class="device-grid" id="deviceGrid"></div>
@@ -424,7 +424,7 @@
 
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Hostname *</label>
+          <label class="form-label">Hostname  / Name *</label>
           <input type="text" class="form-input" id="fName" placeholder="e.g. proxmox-01">
         </div>
         <div class="form-group">
@@ -803,7 +803,7 @@ function clearForm() {
 
 function saveDevice() {
   const name = document.getElementById('fName').value.trim();
-  if (!name) { toast('Hostname is required', 'error'); return; }
+  if (!name) { toast('Hostname / Name is required', 'error'); return; }
 
   const services = serviceRowData.filter(s => s.name.trim()).map(s => ({
     name: s.name.trim(), port: s.port.trim(), notes: s.notes.trim(), url: s.url.trim()
