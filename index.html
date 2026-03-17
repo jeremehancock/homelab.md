@@ -314,8 +314,7 @@
   .detail-field-value { font-family: 'JetBrains Mono', monospace; font-size: 15px; color: var(--text-primary); }
   .detail-notes { font-size: 15px; color: var(--text-secondary); line-height: 1.7; white-space: pre-wrap; }
 
-  .detail-actions { display: flex; gap: 8px; padding: 16px 22px; border-top: 1px solid var(--border); justify-content: flex-end; }
-  .detail-actions .btn-primary { margin-right: auto; }
+  .detail-actions { display: flex; gap: 8px; padding: 16px 22px; border-top: 1px solid var(--border); }
 
   .service-table { width: 100%; border-collapse: collapse; }
   .service-table th {
@@ -996,6 +995,7 @@ function showDetail(id) {
     <div class="detail-actions">
       <button class="btn btn-primary" onclick="closeDetail(); openEditModal('${d.id}')">Edit Device</button>
       <button class="btn btn-danger" onclick="confirmDelete('${d.id}')">Delete</button>
+      <div style="flex:1;"></div>
       <button class="btn" onclick="closeDetail()">Cancel</button>
     </div>
   `;
