@@ -148,7 +148,8 @@
     border-radius: var(--radius); padding: 18px;
     transition: all 0.15s ease; cursor: pointer; position: relative;
   }
-  .device-card:hover { border-color: var(--border-active); box-shadow: var(--shadow); }
+  .device-card:hover, .device-card:focus-visible { border-color: var(--border-active); box-shadow: var(--shadow); }
+  .device-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .device-card.has-children { border-left: 3px solid var(--accent); }
 
   .device-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
@@ -357,6 +358,11 @@
     from { transform: translateX(20px); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
   }
+  @keyframes fadeOut {
+    from { opacity: 1; transform: translateX(0); }
+    to { opacity: 0; transform: translateX(20px); }
+  }
+  .toast.removing { animation: fadeOut 0.3s ease forwards; }
 
   .confirm-dialog { text-align: center; padding: 12px 0; }
   .confirm-dialog p { font-size: 16px; color: var(--text-secondary); margin-bottom: 20px; }
@@ -558,8 +564,8 @@ function loadDevices() {
 }
 function saveDevices(devices) { localStorage.setItem(STORAGE_KEY, JSON.stringify(devices)); }
 function generateId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
-function getDevice(id) { return loadDevices().find(d => d.id === id); }
-function getChildren(parentId) { return loadDevices().filter(d => d.parentId === parentId); }
+function getDevice(id, devices) { return (devices || loadDevices()).find(d => d.id === id); }
+function getChildren(parentId, devices) { return (devices || loadDevices()).filter(d => d.parentId === parentId); }
 
 function toast(message, type = 'success') {
   const container = document.getElementById('toastContainer');
@@ -567,7 +573,10 @@ function toast(message, type = 'success') {
   el.className = `toast ${type}`;
   el.textContent = message;
   container.appendChild(el);
-  setTimeout(() => el.remove(), 3000);
+  setTimeout(() => {
+    el.classList.add('removing');
+    el.addEventListener('animationend', () => el.remove());
+  }, 2700);
 }
 
 function getTypeClass(type) {
@@ -631,13 +640,13 @@ function renderDevices() {
   }
 
   grid.innerHTML = filtered.map(d => {
-    const children = getChildren(d.id);
-    const parent = d.parentId ? getDevice(d.parentId) : null;
+    const children = getChildren(d.id, devices);
+    const parent = d.parentId ? getDevice(d.parentId, devices) : null;
     const svcs = (d.services || []);
     const svcCount = svcs.length;
 
     return `
-    <div class="device-card ${children.length ? 'has-children' : ''}" onclick="showDetail('${d.id}')">
+    <div class="device-card ${children.length ? 'has-children' : ''}" tabindex="0" role="button" onclick="showDetail('${d.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showDetail('${d.id}');}">
       <div class="device-card-header">
         <div>
           <div class="device-name">
@@ -676,6 +685,15 @@ function esc(str) {
   const d = document.createElement('div');
   d.textContent = str;
   return d.innerHTML;
+}
+
+function safeUrl(url) {
+  if (!url) return '';
+  try {
+    const parsed = new URL(url, window.location.href);
+    if (['http:', 'https:'].includes(parsed.protocol)) return esc(url);
+  } catch {}
+  return '';
 }
 
 // Service row management
@@ -858,8 +876,8 @@ function showDetail(id) {
   const d = devices.find(x => x.id === id);
   if (!d) return;
 
-  const children = getChildren(d.id);
-  const parent = d.parentId ? getDevice(d.parentId) : null;
+  const children = getChildren(d.id, devices);
+  const parent = d.parentId ? getDevice(d.parentId, devices) : null;
 
   const panel = document.getElementById('detailPanel');
   panel.innerHTML = `
@@ -924,7 +942,7 @@ function showDetail(id) {
                   <td>${esc(sName)}</td>
                   <td>${esc(sPort) || '—'}</td>
                   <td class="svc-notes">${esc(sNotes || '—')}</td>
-                  <td>${sUrl ? `<a href="${esc(sUrl)}" target="_blank" style="color:var(--accent);text-decoration:none;">${esc(sUrl)}</a>` : '—'}</td>
+                  <td>${sUrl && safeUrl(sUrl) ? `<a href="${safeUrl(sUrl)}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;">${esc(sUrl)}</a>` : (sUrl ? esc(sUrl) : '—')}</td>
                 </tr>`;
               }).join('')}
             </tbody>
@@ -988,7 +1006,7 @@ function confirmDelete(id) {
   const devices = loadDevices();
   const d = devices.find(x => x.id === id);
   if (!d) return;
-  const children = getChildren(id);
+  const children = getChildren(id, devices);
 
   document.getElementById('detailPanel').innerHTML = `
     <div class="modal-header">
@@ -1157,36 +1175,36 @@ function handleImport(event) {
   const files = event.target.files;
   if (!files.length) return;
 
-  let imported = 0;
-  const devices = [];
-
-  Array.from(files).forEach(file => {
+  const filePromises = Array.from(files).map(file => new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = (e) => {
-      const sections = e.target.result.split(/(?=^# [^#])/m).filter(s => s.trim());
+    reader.onload = (e) => resolve(e.target.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsText(file);
+  }));
 
+  Promise.all(filePromises).then(results => {
+    const devices = [];
+
+    results.forEach(text => {
+      const sections = text.split(/(?=^# [^#])/m).filter(s => s.trim());
       sections.forEach(section => {
         if (section.startsWith('# Homelab Inventory')) return;
         const device = markdownToDevice(section);
-        if (device.name) {
-          devices.push(device);
-          imported++;
-        }
+        if (device.name) devices.push(device);
       });
+    });
 
-      devices.forEach(d => {
-        if (d._parentName && !d.parentId) {
-          const parent = devices.find(p => p.name === d._parentName);
-          if (parent) d.parentId = parent.id;
-          delete d._parentName;
-        }
-      });
+    devices.forEach(d => {
+      if (d._parentName && !d.parentId) {
+        const parent = devices.find(p => p.name === d._parentName);
+        if (parent) d.parentId = parent.id;
+      }
+      delete d._parentName;
+    });
 
-      saveDevices(devices);
-      refresh();
-      toast(`Imported ${imported} device${imported !== 1 ? 's' : ''}`);
-    };
-    reader.readAsText(file);
+    saveDevices(devices);
+    refresh();
+    toast(`Imported ${devices.length} device${devices.length !== 1 ? 's' : ''}`);
   });
   event.target.value = '';
 }
