@@ -1149,12 +1149,12 @@ function markdownToDevice(md) {
   return device;
 }
 
-function downloadFile(filename, content) {
+function downloadFile(filename, content, onDone) {
   const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = filename; a.click();
-  URL.revokeObjectURL(url);
+  setTimeout(() => { URL.revokeObjectURL(url); if (onDone) onDone(); }, 500);
 }
 
 function exportAll() {
@@ -1165,8 +1165,9 @@ function exportAll() {
   combined += `> Exported ${new Date().toLocaleString()} — ${devices.length} devices\n\n---\n\n`;
   devices.forEach(d => { combined += deviceToMarkdown(d, devices) + '\n'; });
 
-  downloadFile('homelab.md', combined);
-  toast(`Exported ${devices.length} devices`);
+  downloadFile('homelab.md', combined, () => {
+    toast(`Exported ${devices.length} devices`);
+  });
 }
 
 function importMarkdown() { document.getElementById('fileInput').click(); }
