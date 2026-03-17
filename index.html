@@ -23,7 +23,6 @@
     --accent-glow: rgba(57, 197, 187, 0.15);
     --danger: #e55b5b;
     --danger-dim: rgba(229, 91, 91, 0.15);
-    --warning: #e5a84b;
     --success: #4bc77a;
     --tag-bg: rgba(57, 197, 187, 0.1);
     --tag-border: rgba(57, 197, 187, 0.25);
@@ -374,7 +373,6 @@
     .device-grid { grid-template-columns: 1fr; }
     .form-row { grid-template-columns: 1fr; }
     .service-entry { grid-template-columns: 1fr 60px auto; }
-    .service-entry .svc-notes-input { display: none; }
     .toolbar { flex-direction: column; align-items: stretch; }
     .search-box { width: 100%; }
     .stats-bar { flex-wrap: wrap; gap: 16px; }
@@ -516,7 +514,7 @@
       <div class="form-row full">
         <div class="form-group">
           <label class="form-label">Services</label>
-          <div class="services-editor" id="servicesEditor">
+          <div class="services-editor">
             <div class="service-labels">
               <span>Name</span>
               <span>Port</span>
