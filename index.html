@@ -1242,11 +1242,10 @@ function deviceToPublicSection(d, allDevices) {
   const parent = d.parentId ? allDevices.find(x => x.id === d.parentId) : null;
 
   const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
-  const statusLabel = { online: 'Online', offline: 'Offline', unknown: 'Unknown' }[d.status] || cap(d.status) || 'Unknown';
 
   let md = `### ${sanitizePublic(d.name)}\n\n`;
 
-  let meta = `**${cap(d.type || 'Device')}** · ${statusLabel}`;
+  let meta = `**${cap(d.type || 'Device')}**`;
   if (parent) meta += ` · Hosted on ${sanitizePublic(parent.name)}`;
   md += meta + '\n\n';
 
@@ -1285,8 +1284,7 @@ function deviceToPublicSection(d, allDevices) {
   if (children.length) {
     md += `**Running on this device**\n\n`;
     children.forEach(c => {
-      const cStatus = { online: 'Online', offline: 'Offline', unknown: 'Unknown' }[c.status] || cap(c.status) || '';
-      md += `- **${sanitizePublic(c.name)}** (${cap(c.type || 'device')})${cStatus ? ' · ' + cStatus : ''}\n`;
+      md += `- **${sanitizePublic(c.name)}** (${cap(c.type || 'device')})\n`;
       if (c.os) md += `  - OS: ${sanitizePublic(c.os)}\n`;
       const cServices = (c.services || []).map(s => typeof s === 'string' ? s : s.name).filter(n => n && n !== '—');
       if (cServices.length) md += `  - Services: ${cServices.map(sanitizePublic).join(', ')}\n`;
