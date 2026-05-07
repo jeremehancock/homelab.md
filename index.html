@@ -1313,8 +1313,7 @@ function exportBludit() {
   const online = devices.filter(d => d.status === 'online').length;
   const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
-  let md = `# My Homelab\n\n`;
-  md += `*Last updated: ${date}*\n\n`;
+  let md = `*Last updated: ${date}*\n\n`;
   md += `**${devices.length} device${devices.length !== 1 ? 's' : ''}** · **${online} online**\n\n---\n\n`;
 
   const topLevel = devices.filter(d => !d.parentId);
