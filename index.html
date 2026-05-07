@@ -1283,8 +1283,15 @@ function deviceToBluditSection(d, allDevices) {
   }
 
   if (children.length) {
-    md += `**Hosts**\n\n`;
-    children.forEach(c => { md += `- ${sanitizePublic(c.name)} (${cap(c.type || 'device')})\n`; });
+    md += `**Hosted on this device**\n\n`;
+    children.forEach(c => {
+      const cStatus = { online: 'Online', offline: 'Offline', unknown: 'Unknown' }[c.status] || cap(c.status) || '';
+      md += `- **${sanitizePublic(c.name)}** (${cap(c.type || 'device')})${cStatus ? ' · ' + cStatus : ''}\n`;
+      if (c.os) md += `  - OS: ${sanitizePublic(c.os)}\n`;
+      const cServices = (c.services || []).map(s => typeof s === 'string' ? s : s.name).filter(n => n && n !== '—');
+      if (cServices.length) md += `  - Services: ${cServices.map(sanitizePublic).join(', ')}\n`;
+      if (c.notes && c.notes.trim()) md += `  - ${sanitizePublic(c.notes.trim())}\n`;
+    });
     md += '\n';
   }
 
@@ -1310,18 +1317,19 @@ function exportBludit() {
   md += `*Last updated: ${date}*\n\n`;
   md += `**${devices.length} device${devices.length !== 1 ? 's' : ''}** · **${online} online**\n\n---\n\n`;
 
+  const topLevel = devices.filter(d => !d.parentId);
   const handled = new Set();
   typeOrder.forEach(type => {
-    const group = devices.filter(d => d.type === type);
+    const group = topLevel.filter(d => d.type === type);
     if (!group.length) return;
     handled.add(type);
     md += `## ${typeLabels[type]}\n\n`;
     group.forEach(d => { md += deviceToBluditSection(d, devices) + '---\n\n'; });
   });
 
-  const remaining = [...new Set(devices.map(d => d.type).filter(t => !handled.has(t)))];
+  const remaining = [...new Set(topLevel.map(d => d.type).filter(t => !handled.has(t)))];
   remaining.forEach(type => {
-    const group = devices.filter(d => d.type === type);
+    const group = topLevel.filter(d => d.type === type);
     if (!group.length) return;
     const label = type ? type.charAt(0).toUpperCase() + type.slice(1) : 'Other';
     md += `## ${label}\n\n`;
