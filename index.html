@@ -1308,11 +1308,10 @@ function exportPublic() {
     network: 'Network Devices', storage: 'Storage', other: 'Other',
   };
 
-  const online = devices.filter(d => d.status === 'online').length;
   const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
   let md = `*Last updated: ${date}*\n\n`;
-  md += `**${devices.length} device${devices.length !== 1 ? 's' : ''}** · **${online} online**\n\n---\n\n`;
+  md += `**${devices.length} device${devices.length !== 1 ? 's' : ''}**\n\n---\n\n`;
 
   const topLevel = devices.filter(d => !d.parentId);
   const handled = new Set();
