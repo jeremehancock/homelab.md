@@ -1283,7 +1283,7 @@ function deviceToPublicSection(d, allDevices) {
   }
 
   if (children.length) {
-    md += `**Hosted on this device**\n\n`;
+    md += `**Running on this device**\n\n`;
     children.forEach(c => {
       const cStatus = { online: 'Online', offline: 'Offline', unknown: 'Unknown' }[c.status] || cap(c.status) || '';
       md += `- **${sanitizePublic(c.name)}** (${cap(c.type || 'device')})${cStatus ? ' · ' + cStatus : ''}\n`;
