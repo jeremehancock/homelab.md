@@ -103,9 +103,10 @@
     margin-bottom: 20px; gap: 12px; flex-wrap: wrap;
   }
 
+  .search-wrap { position: relative; display: inline-block; }
   .search-box {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 15px; padding: 8px 14px;
+    font-size: 15px; padding: 8px 34px 8px 14px;
     border-radius: var(--radius);
     border: 1px solid var(--border);
     background: var(--bg-secondary);
@@ -115,6 +116,21 @@
   }
   .search-box::placeholder { color: var(--text-muted); }
   .search-box:focus { border-color: var(--accent); }
+  .search-clear {
+    display: none;
+    position: absolute;
+    top: 50%; right: 6px;
+    transform: translateY(-50%);
+    width: 22px; height: 22px;
+    border: none; background: transparent;
+    color: var(--text-muted); cursor: pointer;
+    border-radius: 50%; padding: 0;
+    font-size: 14px; line-height: 1;
+    align-items: center; justify-content: center;
+    transition: color 0.15s, background 0.15s;
+  }
+  .search-clear:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+  .search-wrap.has-value .search-clear { display: inline-flex; }
 
   .filter-group { display: flex; gap: 4px; flex-wrap: wrap; }
 
@@ -375,6 +391,7 @@
     .form-row { grid-template-columns: 1fr; }
     .service-entry { grid-template-columns: 1fr 60px auto; }
     .toolbar { flex-direction: column; align-items: stretch; }
+    .search-wrap { display: block; }
     .search-box { width: 100%; }
     .stats-bar { flex-wrap: wrap; gap: 16px; }
     .detail-grid { grid-template-columns: 1fr; }
@@ -460,7 +477,10 @@
 <div class="main">
   <div class="stats-bar" id="statsBar"></div>
   <div class="toolbar">
-    <input type="text" class="search-box" id="searchBox" placeholder="Search hostname, name, IP..." oninput="renderDevices()">
+    <div class="search-wrap">
+      <input type="text" class="search-box" id="searchBox" placeholder="Search hostname, name, IP..." oninput="onSearchInput()">
+      <button type="button" class="search-clear" id="searchClear" onclick="clearSearch()" aria-label="Clear search" title="Clear search">✕</button>
+    </div>
     <div class="filter-group" id="filterGroup"></div>
   </div>
   <div class="device-grid" id="deviceGrid"></div>
@@ -679,6 +699,20 @@ function renderFilters() {
 
 let currentFilter = 'all';
 function setFilter(f) { currentFilter = f; renderFilters(); renderDevices(); }
+
+function onSearchInput() {
+  const box = document.getElementById('searchBox');
+  document.querySelector('.search-wrap').classList.toggle('has-value', !!box.value);
+  renderDevices();
+}
+
+function clearSearch() {
+  const box = document.getElementById('searchBox');
+  box.value = '';
+  document.querySelector('.search-wrap').classList.remove('has-value');
+  box.focus();
+  renderDevices();
+}
 
 function renderDevices() {
   const devices = loadDevices();
@@ -1449,8 +1483,12 @@ const PUBLIC_HTML_TEMPLATE = '<!DOCTYPE html>\n'
 + '.logo{font-family:\'JetBrains Mono\',monospace;font-size:20px;font-weight:700;color:var(--accent);letter-spacing:-0.5px;}\n'
 + '.main{max-width:1200px;margin:0 auto;padding:24px 32px;}\n'
 + '.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:12px;flex-wrap:wrap;}\n'
-+ '.search-box{font-family:\'JetBrains Mono\',monospace;font-size:15px;padding:8px 14px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text-primary);width:320px;outline:none;transition:border-color 0.15s ease;}\n'
++ '.search-wrap{position:relative;display:inline-block;}\n'
++ '.search-box{font-family:\'JetBrains Mono\',monospace;font-size:15px;padding:8px 34px 8px 14px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text-primary);width:320px;outline:none;transition:border-color 0.15s ease;}\n'
 + '.search-box::placeholder{color:var(--text-muted);}.search-box:focus{border-color:var(--accent);}\n'
++ '.search-clear{display:none;position:absolute;top:50%;right:6px;transform:translateY(-50%);width:22px;height:22px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;border-radius:50%;padding:0;font-size:14px;line-height:1;align-items:center;justify-content:center;transition:color 0.15s,background 0.15s;}\n'
++ '.search-clear:hover{color:var(--text-primary);background:var(--bg-tertiary);}\n'
++ '.search-wrap.has-value .search-clear{display:inline-flex;}\n'
 + '.filter-group{display:flex;gap:4px;flex-wrap:wrap;}\n'
 + '.filter-btn{font-family:\'JetBrains Mono\',monospace;font-size:13px;padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;transition:all 0.15s ease;text-transform:uppercase;letter-spacing:0.5px;}\n'
 + '.filter-btn:hover{border-color:var(--border-active);color:var(--text-primary);}.filter-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-glow);}\n'
@@ -1480,7 +1518,7 @@ const PUBLIC_HTML_TEMPLATE = '<!DOCTYPE html>\n'
 + '.child-device{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:6px;cursor:pointer;transition:all 0.15s;}.child-device:hover{border-color:var(--border-active);background:var(--bg-tertiary);}.child-device-name{font-family:\'JetBrains Mono\',monospace;font-size:14px;font-weight:500;}.child-device-info{font-size:13px;color:var(--text-secondary);}\n'
 + '.empty-state{text-align:center;padding:80px 20px;}.empty-icon{font-size:52px;margin-bottom:16px;opacity:0.3;}.empty-title{font-family:\'JetBrains Mono\',monospace;font-size:18px;color:var(--text-secondary);margin-bottom:8px;}.empty-text{font-size:15px;color:var(--text-muted);margin-bottom:20px;}\n'
 + '.footer{text-align:center;padding:24px 16px;border-top:1px solid var(--border);margin-top:40px;}.footer-link{font-family:\'JetBrains Mono\',monospace;font-size:13px;color:var(--text-muted);text-decoration:none;transition:color 0.15s;}.footer-link:hover{color:var(--accent);}\n'
-+ '@media (max-width:640px){.header{padding:12px 16px;}.main{padding:16px;}.device-grid{grid-template-columns:1fr;}.detail-grid{grid-template-columns:1fr;}.toolbar{flex-direction:column;align-items:stretch;}.search-box{width:100%;}.stats-bar{flex-wrap:wrap;gap:16px;}}\n'
++ '@media (max-width:640px){.header{padding:12px 16px;}.main{padding:16px;}.device-grid{grid-template-columns:1fr;}.detail-grid{grid-template-columns:1fr;}.toolbar{flex-direction:column;align-items:stretch;}.search-wrap{display:block;}.search-box{width:100%;}.stats-bar{flex-wrap:wrap;gap:16px;}}\n'
 + '</style>\n'
 + '</head>\n'
 + '<body>\n'
@@ -1488,7 +1526,10 @@ const PUBLIC_HTML_TEMPLATE = '<!DOCTYPE html>\n'
 + '<div class="main">\n'
 + '  <div class="stats-bar" id="statsBar"></div>\n'
 + '  <div class="toolbar">\n'
-+ '    <input type="text" class="search-box" id="searchBox" placeholder="Search hostname, name, services...">\n'
++ '    <div class="search-wrap" id="searchWrap">\n'
++ '      <input type="text" class="search-box" id="searchBox" placeholder="Search hostname, name, services...">\n'
++ '      <button type="button" class="search-clear" id="searchClear" aria-label="Clear search" title="Clear search">\\u2715</button>\n'
++ '    </div>\n'
 + '    <div class="filter-group" id="filterGroup"></div>\n'
 + '  </div>\n'
 + '  <div class="device-grid" id="deviceGrid"></div>\n'
@@ -1624,7 +1665,8 @@ const PUBLIC_HTML_TEMPLATE = '<!DOCTYPE html>\n'
 + '  document.getElementById("detailOverlay").classList.add("open");\n'
 + '}\n'
 + 'function closeDetail(){document.getElementById("detailOverlay").classList.remove("open");}\n'
-+ 'document.getElementById("searchBox").addEventListener("input",renderDevices);\n'
++ 'document.getElementById("searchBox").addEventListener("input",function(){document.getElementById("searchWrap").classList.toggle("has-value",!!this.value);renderDevices();});\n'
++ 'document.getElementById("searchClear").addEventListener("click",function(){var b=document.getElementById("searchBox");b.value="";document.getElementById("searchWrap").classList.remove("has-value");b.focus();renderDevices();});\n'
 + 'document.getElementById("filterGroup").addEventListener("click",function(e){var b=e.target.closest("[data-filter]");if(b)setFilter(b.getAttribute("data-filter"));});\n'
 + 'document.getElementById("deviceGrid").addEventListener("click",function(e){var c=e.target.closest("[data-id]");if(c)showDetail(c.getAttribute("data-id"));});\n'
 + 'document.getElementById("deviceGrid").addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){var c=e.target.closest("[data-id]");if(c){e.preventDefault();showDetail(c.getAttribute("data-id"));}}});\n'
