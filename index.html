@@ -1252,7 +1252,7 @@ function deviceToPublicSection(d, allDevices) {
 
   const specs = [
     ['System', d.system], ['OS', d.os], ['CPU', d.cpu],
-    ['RAM', d.ram], ['Location', d.location],
+    ['RAM', d.ram],
   ].filter(([, v]) => v && v !== '—');
 
   if (specs.length) {
