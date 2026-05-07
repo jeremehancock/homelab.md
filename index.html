@@ -449,7 +449,7 @@
         <div class="export-menu-label">Format</div>
         <button onclick="exportAll(); closeExportMenu()">homelab.md Full</button>
         <hr>
-        <button onclick="exportBludit(); closeExportMenu()">homelab.md Public</button>
+        <button onclick="exportPublic(); closeExportMenu()">homelab.md Public</button>
       </div>
     </div>
     <button class="btn btn-primary btn-sm" onclick="openAddModal()">+</button>
@@ -1218,7 +1218,7 @@ function closeExportMenu() {
 }
 document.addEventListener('click', closeExportMenu);
 
-// Bludit public export helpers
+// Public export helpers
 function sanitizePublic(text) {
   if (typeof text !== 'string') return '';
   return text
@@ -1237,7 +1237,7 @@ function isPublicUrl(url) {
   } catch { return false; }
 }
 
-function deviceToBluditSection(d, allDevices) {
+function deviceToPublicSection(d, allDevices) {
   const children = allDevices.filter(c => c.parentId === d.id);
   const parent = d.parentId ? allDevices.find(x => x.id === d.parentId) : null;
 
@@ -1300,7 +1300,7 @@ function deviceToBluditSection(d, allDevices) {
   return md;
 }
 
-function exportBludit() {
+function exportPublic() {
   const devices = loadDevices();
   if (!devices.length) { toast('No devices to export', 'error'); return; }
 
@@ -1323,7 +1323,7 @@ function exportBludit() {
     if (!group.length) return;
     handled.add(type);
     md += `## ${typeLabels[type]}\n\n`;
-    group.forEach(d => { md += deviceToBluditSection(d, devices) + '---\n\n'; });
+    group.forEach(d => { md += deviceToPublicSection(d, devices) + '---\n\n'; });
   });
 
   const remaining = [...new Set(topLevel.map(d => d.type).filter(t => !handled.has(t)))];
@@ -1332,11 +1332,11 @@ function exportBludit() {
     if (!group.length) return;
     const label = type ? type.charAt(0).toUpperCase() + type.slice(1) : 'Other';
     md += `## ${label}\n\n`;
-    group.forEach(d => { md += deviceToBluditSection(d, devices) + '---\n\n'; });
+    group.forEach(d => { md += deviceToPublicSection(d, devices) + '---\n\n'; });
   });
 
   downloadFile('homelab-public.md', md, () => {
-    toast('Exported for Bludit');
+    toast('Exported public markdown');
   });
 }
 
