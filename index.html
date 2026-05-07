@@ -1222,6 +1222,7 @@ document.addEventListener('click', closeExportMenu);
 function sanitizePublic(text) {
   if (typeof text !== 'string') return '';
   return text
+    .replace(/https?:\/\/[^\s)>\]"']*/gi, '[link removed]')
     .replace(/\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\b/g, '[private]')
     .replace(/\b(?:[0-9A-Fa-f]{2}[:\-]){5}[0-9A-Fa-f]{2}\b/g, '[private]');
 }
