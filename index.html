@@ -447,9 +447,9 @@
       <button class="btn btn-sm" onclick="toggleExportMenu(event)" title="Export options">↓ Export ▾</button>
       <div class="export-menu" id="exportMenu">
         <div class="export-menu-label">Format</div>
-        <button onclick="exportAll(); closeExportMenu()">homelab.md — full backup</button>
+        <button onclick="exportAll(); closeExportMenu()">homelab.md Full</button>
         <hr>
-        <button onclick="exportBludit(); closeExportMenu()">Bludit — public site</button>
+        <button onclick="exportBludit(); closeExportMenu()">homelab.md Public</button>
       </div>
     </div>
     <button class="btn btn-primary btn-sm" onclick="openAddModal()">+</button>
@@ -1276,8 +1276,7 @@ function deviceToBluditSection(d, allDevices) {
     services.forEach(s => {
       const name = sanitizePublic(s.name);
       const note = s.notes && s.notes !== '—' ? ' — ' + sanitizePublic(s.notes) : '';
-      const url = isPublicUrl(s.url) ? s.url : '';
-      md += url ? `- [${name}](${url})${note}\n` : `- ${name}${note}\n`;
+      md += `- ${name}${note}\n`;
     });
     md += '\n';
   }
