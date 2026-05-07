@@ -17,6 +17,7 @@ homelab.md gives you a clean interface to catalog every device in your homelab: 
 - **Structured services** — Each device can have multiple services with name, port, notes, and a clickable URL
 - **Structured storage** — Track multiple drives per device with type, size, and notes
 - **Markdown import/export** — The `homelab.md` file is the source of truth. Import to load, export to save
+- **Public export** — Export a sanitized `homelab-public.md` suitable for sharing publicly, such as on a public-facing website
 - **Search and filter** — Filter by device type or search across hostnames, IPs, services, and notes
 - **Stats overview** — At-a-glance counts for devices, online status, hosts, VMs/LXCs, and total services
 - **Completely offline** — No server, no API calls, no CDN. Just one HTML file
@@ -28,7 +29,7 @@ homelab.md gives you a clean interface to catalog every device in your homelab: 
 3. Click **+** to add your first device
 4. Fill in the details — hostname, type, IP, system, OS, CPU, RAM, storage, services, notes
 5. For VMs and containers, use the **Host / Parent Device** dropdown to link them to their host
-6. Click **↓ Export** to save your data as `homelab.md`
+6. Click **↓ Export** and choose **homelab.md Full** to save your data as `homelab.md`
 
 ### How Data Is Stored
 
@@ -48,6 +49,20 @@ The intended workflow is:
 ### The Markdown File
 
 The exported `homelab.md` is human-readable Markdown. Each device is an `h1` section with metadata as a bullet list, and services/storage as Markdown tables. You can read it, edit it in any text editor, or render it on GitHub. Parent-child relationships are preserved via IDs in the footer of each device section.
+
+### Public Export
+
+The **↓ Export → homelab.md Public** option generates a `homelab-public.md` file intended for public use cases such as displaying your homelab on a public-facing website that supports Markdown. It produces a clean, readable summary of your homelab grouped by device type.
+
+Before writing the file, the export automatically sanitizes anything you wouldn't want to share publicly:
+
+- **IP addresses** — replaced with `[private]`
+- **MAC addresses** — replaced with `[private]`
+- **All URLs and links** — replaced with `[link removed]` (service URLs and anything embedded in notes)
+- **Port numbers** — omitted entirely from the services list
+- **Internal metadata** — device IDs, parent IDs, and timestamps are not included
+
+What remains is the hardware and software story of your homelab: device names, types, specs, storage, service names, and any notes you've written — all stripped of anything that could expose your internal network.
 
 ## Device Types
 

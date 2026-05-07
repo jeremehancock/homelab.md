@@ -396,6 +396,45 @@
   .footer-link:hover { color: var(--accent); }
 
   .hidden { display: none; }
+
+  .export-wrap { position: relative; }
+  .export-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border-active);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    min-width: 180px;
+    z-index: 200;
+    overflow: hidden;
+  }
+  .export-menu.open { display: block; }
+  .export-menu button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 9px 14px;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    line-height: 1.4;
+  }
+  .export-menu button:hover { background: var(--bg-tertiary); color: var(--accent); }
+  .export-menu-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    padding: 8px 14px 4px;
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+  .export-menu hr { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
 </style>
 </head>
 <body>
@@ -404,7 +443,15 @@
   <div class="logo">homelab<span>.md</span></div>
   <div class="header-actions">
     <button class="btn btn-sm" onclick="importMarkdown()" title="Import .md files">↑ Import</button>
-    <button class="btn btn-sm" onclick="exportAll()" title="Export all as .md">↓ Export</button>
+    <div class="export-wrap">
+      <button class="btn btn-sm" onclick="toggleExportMenu(event)" title="Export options">↓ Export ▾</button>
+      <div class="export-menu" id="exportMenu">
+        <div class="export-menu-label">Format</div>
+        <button onclick="exportAll(); closeExportMenu()">homelab.md Full</button>
+        <hr>
+        <button onclick="exportBludit(); closeExportMenu()">homelab.md Public</button>
+      </div>
+    </div>
     <button class="btn btn-primary btn-sm" onclick="openAddModal()">+</button>
   </div>
 </header>
@@ -1160,6 +1207,130 @@ function downloadFile(filename, content, onDone) {
   const a = document.createElement('a');
   a.href = url; a.download = filename; a.click();
   setTimeout(() => { URL.revokeObjectURL(url); if (onDone) onDone(); }, 500);
+}
+
+function toggleExportMenu(e) {
+  e.stopPropagation();
+  document.getElementById('exportMenu').classList.toggle('open');
+}
+function closeExportMenu() {
+  document.getElementById('exportMenu').classList.remove('open');
+}
+document.addEventListener('click', closeExportMenu);
+
+// Bludit public export helpers
+function sanitizePublic(text) {
+  if (typeof text !== 'string') return '';
+  return text
+    .replace(/https?:\/\/[^\s)>\]"']*/gi, '[link removed]')
+    .replace(/\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\b/g, '[private]')
+    .replace(/\b(?:[0-9A-Fa-f]{2}[:\-]){5}[0-9A-Fa-f]{2}\b/g, '[private]');
+}
+
+function isPublicUrl(url) {
+  if (!url || url === '—') return false;
+  try {
+    const u = new URL(url);
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
+    const h = u.hostname;
+    return !(/^(localhost|127\.|0\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/i.test(h));
+  } catch { return false; }
+}
+
+function deviceToBluditSection(d, allDevices) {
+  const children = allDevices.filter(c => c.parentId === d.id);
+  const parent = d.parentId ? allDevices.find(x => x.id === d.parentId) : null;
+
+  const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+  const statusLabel = { online: 'Online', offline: 'Offline', unknown: 'Unknown' }[d.status] || cap(d.status) || 'Unknown';
+
+  let md = `### ${sanitizePublic(d.name)}\n\n`;
+
+  let meta = `**${cap(d.type || 'Device')}** · ${statusLabel}`;
+  if (parent) meta += ` · Hosted on ${sanitizePublic(parent.name)}`;
+  md += meta + '\n\n';
+
+  const specs = [
+    ['System', d.system], ['OS', d.os], ['CPU', d.cpu],
+    ['RAM', d.ram], ['Location', d.location],
+  ].filter(([, v]) => v && v !== '—');
+
+  if (specs.length) {
+    md += `| | |\n|---|---|\n`;
+    specs.forEach(([k, v]) => { md += `| ${k} | ${sanitizePublic(v)} |\n`; });
+    md += '\n';
+  }
+
+  if (Array.isArray(d.storage) && d.storage.length) {
+    md += `**Storage**\n\n| Drive | Size | Notes |\n|---|---|---|\n`;
+    d.storage.forEach(s => {
+      if (!s.type) return;
+      md += `| ${sanitizePublic(s.type)} | ${s.size || '—'} | ${sanitizePublic(s.notes) || '—'} |\n`;
+    });
+    md += '\n';
+  }
+
+  const services = (d.services || []).map(s => typeof s === 'string' ? { name: s, notes: '', url: '' } : s)
+    .filter(s => s.name && s.name !== '—');
+  if (services.length) {
+    md += `**Services**\n\n`;
+    services.forEach(s => {
+      const name = sanitizePublic(s.name);
+      const note = s.notes && s.notes !== '—' ? ' — ' + sanitizePublic(s.notes) : '';
+      md += `- ${name}${note}\n`;
+    });
+    md += '\n';
+  }
+
+  if (children.length) {
+    md += `**Hosts**\n\n`;
+    children.forEach(c => { md += `- ${sanitizePublic(c.name)} (${cap(c.type || 'device')})\n`; });
+    md += '\n';
+  }
+
+  if (d.notes && d.notes.trim()) md += `${sanitizePublic(d.notes.trim())}\n\n`;
+
+  return md;
+}
+
+function exportBludit() {
+  const devices = loadDevices();
+  if (!devices.length) { toast('No devices to export', 'error'); return; }
+
+  const typeOrder = ['server', 'network', 'storage', 'vm', 'container', 'other'];
+  const typeLabels = {
+    server: 'Servers', vm: 'Virtual Machines', container: 'Containers / LXC',
+    network: 'Network Devices', storage: 'Storage', other: 'Other',
+  };
+
+  const online = devices.filter(d => d.status === 'online').length;
+  const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  let md = `# My Homelab\n\n`;
+  md += `*Last updated: ${date}*\n\n`;
+  md += `**${devices.length} device${devices.length !== 1 ? 's' : ''}** · **${online} online**\n\n---\n\n`;
+
+  const handled = new Set();
+  typeOrder.forEach(type => {
+    const group = devices.filter(d => d.type === type);
+    if (!group.length) return;
+    handled.add(type);
+    md += `## ${typeLabels[type]}\n\n`;
+    group.forEach(d => { md += deviceToBluditSection(d, devices) + '---\n\n'; });
+  });
+
+  const remaining = [...new Set(devices.map(d => d.type).filter(t => !handled.has(t)))];
+  remaining.forEach(type => {
+    const group = devices.filter(d => d.type === type);
+    if (!group.length) return;
+    const label = type ? type.charAt(0).toUpperCase() + type.slice(1) : 'Other';
+    md += `## ${label}\n\n`;
+    group.forEach(d => { md += deviceToBluditSection(d, devices) + '---\n\n'; });
+  });
+
+  downloadFile('homelab-public.md', md, () => {
+    toast('Exported for Bludit');
+  });
 }
 
 function exportAll() {
