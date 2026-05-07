@@ -17,7 +17,7 @@ homelab.md gives you a clean interface to catalog every device in your homelab: 
 - **Structured services** — Each device can have multiple services with name, port, notes, and a clickable URL
 - **Structured storage** — Track multiple drives per device with type, size, and notes
 - **Markdown import/export** — The `homelab.md` file is the source of truth. Import to load, export to save
-- **Public export for Bludit** — Export a sanitized `homelab-public.md` suitable for a public-facing Bludit CMS page
+- **Public export** — Export a sanitized `homelab-public.md` suitable for sharing publicly, such as on a public-facing website
 - **Search and filter** — Filter by device type or search across hostnames, IPs, services, and notes
 - **Stats overview** — At-a-glance counts for devices, online status, hosts, VMs/LXCs, and total services
 - **Completely offline** — No server, no API calls, no CDN. Just one HTML file
@@ -50,9 +50,9 @@ The intended workflow is:
 
 The exported `homelab.md` is human-readable Markdown. Each device is an `h1` section with metadata as a bullet list, and services/storage as Markdown tables. You can read it, edit it in any text editor, or render it on GitHub. Parent-child relationships are preserved via IDs in the footer of each device section.
 
-### Public Export for Bludit
+### Public Export
 
-The **↓ Export → homelab.md Public** option generates a `homelab-public.md` file intended to be pasted into a [Bludit](https://www.bludit.com/) CMS page (or any other Markdown-based site). It produces a clean, readable summary of your homelab grouped by device type.
+The **↓ Export → homelab.md Public** option generates a `homelab-public.md` file intended for public use cases such as displaying your homelab on a public-facing website that supports Markdown. It produces a clean, readable summary of your homelab grouped by device type.
 
 Before writing the file, the export automatically sanitizes anything you wouldn't want to share publicly:
 
