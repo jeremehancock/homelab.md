@@ -677,14 +677,14 @@ function renderStats() {
   const devices = loadDevices();
   const online = devices.filter(d => d.status === 'online').length;
   const hosts = devices.filter(d => !d.parentId).length;
-  const children = devices.filter(d => d.parentId).length;
+  const vmsAndContainers = devices.filter(d => d.type === 'vm' || d.type === 'container').length;
   const totalServices = devices.reduce((sum, d) => sum + (d.services ? d.services.length : 0), 0);
 
   document.getElementById('statsBar').innerHTML = `
     <div class="stat"><span class="stat-value">${devices.length}</span><span class="stat-label">Devices</span></div>
     <div class="stat"><span class="stat-value">${online}</span><span class="stat-label">Online</span></div>
     <div class="stat"><span class="stat-value">${hosts}</span><span class="stat-label">Hosts</span></div>
-    <div class="stat"><span class="stat-value">${children}</span><span class="stat-label">VMs/Containers</span></div>
+    <div class="stat"><span class="stat-value">${vmsAndContainers}</span><span class="stat-label">VMs/Containers</span></div>
     <div class="stat"><span class="stat-value">${totalServices}</span><span class="stat-label">Services</span></div>
   `;
 }
@@ -1546,12 +1546,12 @@ const PUBLIC_HTML_TEMPLATE = '<!DOCTYPE html>\n'
 + 'function getChildren(parentId){return DEVICES.filter(function(d){return d.parentId===parentId;});}\n'
 + 'function renderStats(){\n'
 + '  var hosts=DEVICES.filter(function(d){return !d.parentId;}).length;\n'
-+ '  var children=DEVICES.filter(function(d){return !!d.parentId;}).length;\n'
++ '  var vmsAndContainers=DEVICES.filter(function(d){return d.type==="vm"||d.type==="container";}).length;\n'
 + '  var totalServices=DEVICES.reduce(function(sum,d){return sum+(d.services?d.services.length:0);},0);\n'
 + '  document.getElementById("statsBar").innerHTML=\n'
 + '    \'<div class="stat"><span class="stat-value">\'+DEVICES.length+\'</span><span class="stat-label">Devices</span></div>\'+\n'
 + '    \'<div class="stat"><span class="stat-value">\'+hosts+\'</span><span class="stat-label">Hosts</span></div>\'+\n'
-+ '    \'<div class="stat"><span class="stat-value">\'+children+\'</span><span class="stat-label">VMs/Containers</span></div>\'+\n'
++ '    \'<div class="stat"><span class="stat-value">\'+vmsAndContainers+\'</span><span class="stat-label">VMs/Containers</span></div>\'+\n'
 + '    \'<div class="stat"><span class="stat-value">\'+totalServices+\'</span><span class="stat-label">Services</span></div>\';\n'
 + '}\n'
 + 'function renderFilters(){\n'
