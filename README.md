@@ -18,6 +18,7 @@ homelab.md gives you a clean interface to catalog every device in your homelab: 
 - **Structured storage** — Track multiple drives per device with type, size, and notes
 - **Markdown import/export** — The `homelab.md` file is the source of truth. Import to load, export to save
 - **Public export** — Export a sanitized `homelab-public.md` suitable for sharing publicly, such as on a public-facing website
+- **Public HTML export** — Export a sanitized, self-contained `homelab.html` that renders an interactive read-only version of the dashboard, ideal for hosting publicly
 - **Search and filter** — Filter by device type or search across hostnames, IPs, services, and notes
 - **Stats overview** — At-a-glance counts for devices, online status, hosts, VMs/LXCs, and total services
 - **Completely offline** — No server, no API calls, no CDN. Just one HTML file
@@ -63,6 +64,18 @@ Before writing the file, the export automatically sanitizes anything you wouldn'
 - **Internal metadata** — device IDs, parent IDs, and timestamps are not included
 
 What remains is the hardware and software story of your homelab: device names, types, specs, storage, service names, and any notes you've written — all stripped of anything that could expose your internal network.
+
+### Public HTML Export
+
+The **↓ Export → homelab.html Public** option generates a `homelab.html` file: a single, self-contained HTML page that mirrors the look and interactivity of the homelab.md UI but in a read-only form. Drop it on any static host and you get a live, searchable, filterable dashboard of your homelab.
+
+When you choose this export, you'll be prompted for a **Site Name** that replaces "homelab.md" in the top-left of the exported page (e.g. "My Homelab"). The exported file:
+
+- Uses the same theme and layout as the main app
+- Supports search, type filters, and the device detail modal
+- Has no add/edit/delete/import/export controls — it's strictly read-only
+- Applies the **same sanitization** as the public Markdown export (IPs, MAC addresses, URLs, ports, IDs, and timestamps are removed)
+- Is fully offline — no server, no API calls, just one HTML file
 
 ## Device Types
 
