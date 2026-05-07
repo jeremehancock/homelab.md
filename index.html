@@ -16,8 +16,8 @@
     --border: #1e2a3a;
     --border-active: #2d4a6f;
     --text-primary: #c8d6e5;
-    --text-secondary: #6b7d93;
-    --text-muted: #3d4f63;
+    --text-secondary: #95a8be;
+    --text-muted: #738aa3;
     --accent: #39c5bb;
     --accent-dim: #2a9d95;
     --accent-glow: rgba(57, 197, 187, 0.15);
@@ -103,9 +103,10 @@
     margin-bottom: 20px; gap: 12px; flex-wrap: wrap;
   }
 
+  .search-wrap { position: relative; display: inline-block; }
   .search-box {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 15px; padding: 8px 14px;
+    font-size: 15px; padding: 8px 34px 8px 14px;
     border-radius: var(--radius);
     border: 1px solid var(--border);
     background: var(--bg-secondary);
@@ -115,6 +116,21 @@
   }
   .search-box::placeholder { color: var(--text-muted); }
   .search-box:focus { border-color: var(--accent); }
+  .search-clear {
+    display: none;
+    position: absolute;
+    top: 50%; right: 6px;
+    transform: translateY(-50%);
+    width: 22px; height: 22px;
+    border: none; background: transparent;
+    color: var(--text-muted); cursor: pointer;
+    border-radius: 50%; padding: 0;
+    font-size: 14px; line-height: 1;
+    align-items: center; justify-content: center;
+    transition: color 0.15s, background 0.15s;
+  }
+  .search-clear:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+  .search-wrap.has-value .search-clear { display: inline-flex; }
 
   .filter-group { display: flex; gap: 4px; flex-wrap: wrap; }
 
@@ -237,7 +253,7 @@
     color: var(--text-primary); outline: none; transition: border-color 0.15s ease;
   }
   .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
-  .form-select { cursor: pointer; padding-right: 32px; -webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7d93' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+  .form-select { cursor: pointer; padding-right: 32px; -webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2395a8be' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
   .form-select option { background: var(--bg-primary); }
   .form-textarea { resize: vertical; min-height: 80px; font-family: 'JetBrains Mono', monospace; }
   .form-hint { font-size: 13px; color: var(--text-muted); }
@@ -375,6 +391,7 @@
     .form-row { grid-template-columns: 1fr; }
     .service-entry { grid-template-columns: 1fr 60px auto; }
     .toolbar { flex-direction: column; align-items: stretch; }
+    .search-wrap { display: block; }
     .search-box { width: 100%; }
     .stats-bar { flex-wrap: wrap; gap: 16px; }
     .detail-grid { grid-template-columns: 1fr; }
@@ -450,6 +467,7 @@
         <button onclick="exportAll(); closeExportMenu()">homelab.md Full</button>
         <hr>
         <button onclick="exportPublic(); closeExportMenu()">homelab.md Public</button>
+        <button onclick="openHtmlExportModal(); closeExportMenu()">homelab.html Public</button>
       </div>
     </div>
     <button class="btn btn-primary btn-sm" onclick="openAddModal()">+</button>
@@ -459,7 +477,10 @@
 <div class="main">
   <div class="stats-bar" id="statsBar"></div>
   <div class="toolbar">
-    <input type="text" class="search-box" id="searchBox" placeholder="Search hostname, name, IP..." oninput="renderDevices()">
+    <div class="search-wrap">
+      <input type="text" class="search-box" id="searchBox" placeholder="Search..." oninput="onSearchInput()">
+      <button type="button" class="search-clear" id="searchClear" onclick="clearSearch()" aria-label="Clear search" title="Clear search">✕</button>
+    </div>
     <div class="filter-group" id="filterGroup"></div>
   </div>
   <div class="device-grid" id="deviceGrid"></div>
@@ -598,6 +619,28 @@
   <div class="detail-panel" id="detailPanel"></div>
 </div>
 
+<div class="modal-overlay" id="htmlExportModal">
+  <div class="modal" style="max-width: 480px;">
+    <div class="modal-header">
+      <div class="modal-title">Export HTML (Public)</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeHtmlExportModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row full">
+        <div class="form-group">
+          <label class="form-label">Site Name</label>
+          <input type="text" class="form-input" id="htmlSiteName" placeholder="e.g. My Homelab" onkeydown="if(event.key==='Enter'){event.preventDefault();confirmExportHtml();}">
+          <span class="form-hint">Replaces "homelab.md" in the top-left of the exported page. Same sanitization as the public Markdown export.</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeHtmlExportModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmExportHtml()">Generate HTML</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast-container" id="toastContainer"></div>
 <input type="file" class="hidden" id="fileInput" accept=".md,.markdown" multiple onchange="handleImport(event)">
 
@@ -634,14 +677,14 @@ function renderStats() {
   const devices = loadDevices();
   const online = devices.filter(d => d.status === 'online').length;
   const hosts = devices.filter(d => !d.parentId).length;
-  const children = devices.filter(d => d.parentId).length;
+  const vmsAndContainers = devices.filter(d => d.type === 'vm' || d.type === 'container').length;
   const totalServices = devices.reduce((sum, d) => sum + (d.services ? d.services.length : 0), 0);
 
   document.getElementById('statsBar').innerHTML = `
     <div class="stat"><span class="stat-value">${devices.length}</span><span class="stat-label">Devices</span></div>
     <div class="stat"><span class="stat-value">${online}</span><span class="stat-label">Online</span></div>
     <div class="stat"><span class="stat-value">${hosts}</span><span class="stat-label">Hosts</span></div>
-    <div class="stat"><span class="stat-value">${children}</span><span class="stat-label">VMs/Containers</span></div>
+    <div class="stat"><span class="stat-value">${vmsAndContainers}</span><span class="stat-label">VMs/Containers</span></div>
     <div class="stat"><span class="stat-value">${totalServices}</span><span class="stat-label">Services</span></div>
   `;
 }
@@ -656,6 +699,20 @@ function renderFilters() {
 
 let currentFilter = 'all';
 function setFilter(f) { currentFilter = f; renderFilters(); renderDevices(); }
+
+function onSearchInput() {
+  const box = document.getElementById('searchBox');
+  document.querySelector('.search-wrap').classList.toggle('has-value', !!box.value);
+  renderDevices();
+}
+
+function clearSearch() {
+  const box = document.getElementById('searchBox');
+  box.value = '';
+  document.querySelector('.search-wrap').classList.remove('has-value');
+  box.focus();
+  renderDevices();
+}
 
 function renderDevices() {
   const devices = loadDevices();
@@ -1339,6 +1396,288 @@ function exportPublic() {
   });
 }
 
+function openHtmlExportModal() {
+  const devices = loadDevices();
+  if (!devices.length) { toast('No devices to export', 'error'); return; }
+  document.getElementById('htmlSiteName').value = '';
+  document.getElementById('htmlExportModal').classList.add('open');
+  setTimeout(() => document.getElementById('htmlSiteName').focus(), 50);
+}
+
+function closeHtmlExportModal() {
+  document.getElementById('htmlExportModal').classList.remove('open');
+}
+
+function confirmExportHtml() {
+  const name = document.getElementById('htmlSiteName').value.trim() || 'My Homelab';
+  closeHtmlExportModal();
+  exportHtml(name);
+}
+
+function sanitizeDeviceForPublic(d) {
+  return {
+    id: d.id,
+    parentId: d.parentId || null,
+    name: sanitizePublic(d.name || ''),
+    type: d.type || 'other',
+    system: sanitizePublic(d.system || ''),
+    os: sanitizePublic(d.os || ''),
+    cpu: sanitizePublic(d.cpu || ''),
+    ram: sanitizePublic(d.ram || ''),
+    storage: Array.isArray(d.storage) ? d.storage
+      .filter(s => s && s.type)
+      .map(s => ({
+        type: sanitizePublic(s.type || ''),
+        size: s.size || '',
+        notes: sanitizePublic(s.notes || ''),
+      })) : [],
+    services: (d.services || [])
+      .map(s => typeof s === 'string' ? { name: s, notes: '' } : { name: s.name || '', notes: s.notes || '' })
+      .filter(s => s.name && s.name !== '—')
+      .map(s => ({ name: sanitizePublic(s.name), notes: sanitizePublic(s.notes) })),
+    notes: sanitizePublic(d.notes || ''),
+  };
+}
+
+function exportHtml(siteName) {
+  const devices = loadDevices();
+  if (!devices.length) { toast('No devices to export', 'error'); return; }
+
+  const sanitized = devices.map(sanitizeDeviceForPublic);
+  const html = buildPublicHtml(siteName, sanitized);
+
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'homelab.html'; a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); toast('Exported homelab.html'); }, 500);
+}
+
+function buildPublicHtml(siteName, devices) {
+  const safeName = (siteName || 'My Homelab').replace(/[<>&"']/g, c => ({ '<':'&lt;', '>':'&gt;', '&':'&amp;', '"':'&quot;', "'":'&#39;' }[c]));
+  const dataJson = JSON.stringify(devices)
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/&/g, '\\u0026')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029');
+  return PUBLIC_HTML_TEMPLATE
+    .replace(/__SITE_NAME__/g, safeName)
+    .replace('__DEVICE_DATA__', dataJson);
+}
+
+const PUBLIC_HTML_TEMPLATE = '<!DOCTYPE html>\n'
++ '<html lang="en">\n'
++ '<head>\n'
++ '<meta charset="UTF-8">\n'
++ '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
++ '<title>__SITE_NAME__</title>\n'
++ '<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 32 32\'%3E%3Crect width=\'32\' height=\'32\' rx=\'6\' fill=\'%230a0e14\'/%3E%3Crect x=\'4\' y=\'6\' width=\'24\' height=\'8\' rx=\'2\' fill=\'%23141b24\' stroke=\'%2339c5bb\' stroke-width=\'1.5\'/%3E%3Ccircle cx=\'8.5\' cy=\'10\' r=\'1.5\' fill=\'%234bc77a\'/%3E%3Ccircle cx=\'13\' cy=\'10\' r=\'1.5\' fill=\'%2339c5bb\'/%3E%3Crect x=\'18\' y=\'9\' width=\'7\' height=\'2\' rx=\'1\' fill=\'%233d4f63\'/%3E%3Crect x=\'4\' y=\'18\' width=\'24\' height=\'8\' rx=\'2\' fill=\'%23141b24\' stroke=\'%2339c5bb\' stroke-width=\'1.5\'/%3E%3Ccircle cx=\'8.5\' cy=\'22\' r=\'1.5\' fill=\'%234bc77a\'/%3E%3Ccircle cx=\'13\' cy=\'22\' r=\'1.5\' fill=\'%2339c5bb\'/%3E%3Crect x=\'18\' y=\'21\' width=\'7\' height=\'2\' rx=\'1\' fill=\'%233d4f63\'/%3E%3C/svg%3E">\n'
++ '<style>\n'
++ '@import url(\'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap\');\n'
++ ':root{--bg-primary:#0a0e14;--bg-secondary:#111820;--bg-tertiary:#1a2130;--bg-card:#141b24;--border:#1e2a3a;--border-active:#2d4a6f;--text-primary:#c8d6e5;--text-secondary:#95a8be;--text-muted:#738aa3;--accent:#39c5bb;--accent-dim:#2a9d95;--accent-glow:rgba(57,197,187,0.15);--success:#4bc77a;--tag-bg:rgba(57,197,187,0.1);--tag-border:rgba(57,197,187,0.25);--purple:#b478e6;--purple-bg:rgba(180,120,230,0.15);--blue:#648ce6;--blue-bg:rgba(100,140,230,0.15);--radius:6px;--shadow:0 2px 12px rgba(0,0,0,0.3);}\n'
++ '*{margin:0;padding:0;box-sizing:border-box;}\n'
++ 'body{font-family:\'IBM Plex Sans\',sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh;line-height:1.6;}\n'
++ '::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:var(--bg-primary);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}::-webkit-scrollbar-thumb:hover{background:var(--border-active);}\n'
++ '.header{background:var(--bg-secondary);border-bottom:1px solid var(--border);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}\n'
++ '.logo{font-family:\'JetBrains Mono\',monospace;font-size:20px;font-weight:700;color:var(--accent);letter-spacing:-0.5px;}\n'
++ '.main{max-width:1200px;margin:0 auto;padding:24px 32px;}\n'
++ '.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:12px;flex-wrap:wrap;}\n'
++ '.search-wrap{position:relative;display:inline-block;}\n'
++ '.search-box{font-family:\'JetBrains Mono\',monospace;font-size:15px;padding:8px 34px 8px 14px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text-primary);width:320px;outline:none;transition:border-color 0.15s ease;}\n'
++ '.search-box::placeholder{color:var(--text-muted);}.search-box:focus{border-color:var(--accent);}\n'
++ '.search-clear{display:none;position:absolute;top:50%;right:6px;transform:translateY(-50%);width:22px;height:22px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;border-radius:50%;padding:0;font-size:14px;line-height:1;align-items:center;justify-content:center;transition:color 0.15s,background 0.15s;}\n'
++ '.search-clear:hover{color:var(--text-primary);background:var(--bg-tertiary);}\n'
++ '.search-wrap.has-value .search-clear{display:inline-flex;}\n'
++ '.filter-group{display:flex;gap:4px;flex-wrap:wrap;}\n'
++ '.filter-btn{font-family:\'JetBrains Mono\',monospace;font-size:13px;padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;transition:all 0.15s ease;text-transform:uppercase;letter-spacing:0.5px;}\n'
++ '.filter-btn:hover{border-color:var(--border-active);color:var(--text-primary);}.filter-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-glow);}\n'
++ '.stats-bar{display:flex;gap:24px;margin-bottom:24px;padding:14px 20px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);flex-wrap:wrap;}\n'
++ '.stat{display:flex;align-items:baseline;gap:6px;}.stat-value{font-family:\'JetBrains Mono\',monospace;font-size:24px;font-weight:700;color:var(--accent);}.stat-label{font-size:14px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;}\n'
++ '.device-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:14px;}\n'
++ '.device-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;transition:all 0.15s ease;cursor:pointer;position:relative;}\n'
++ '.device-card:hover,.device-card:focus-visible{border-color:var(--border-active);box-shadow:var(--shadow);}.device-card:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}.device-card.has-children{border-left:3px solid var(--accent);}\n'
++ '.device-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}\n'
++ '.device-name{font-family:\'JetBrains Mono\',monospace;font-size:17px;font-weight:600;color:var(--text-primary);}\n'
++ '.device-type-badge{font-family:\'JetBrains Mono\',monospace;font-size:12px;text-transform:uppercase;letter-spacing:0.8px;padding:3px 8px;border-radius:3px;font-weight:600;white-space:nowrap;}\n'
++ '.badge-server{background:rgba(57,197,187,0.15);color:var(--accent);}.badge-vm{background:var(--blue-bg);color:var(--blue);}.badge-container{background:var(--purple-bg);color:var(--purple);}.badge-network{background:rgba(230,180,60,0.15);color:#e6b43c;}.badge-storage{background:rgba(230,120,80,0.15);color:#e67850;}.badge-other{background:rgba(150,150,170,0.15);color:#9696aa;}\n'
++ '.device-parent-link{font-size:13px;color:var(--text-muted);margin-bottom:8px;}.device-parent-link strong{color:var(--text-secondary);}\n'
++ '.device-meta{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:8px;}.meta-item{font-size:14px;color:var(--text-secondary);}.meta-item strong{color:var(--text-primary);font-weight:500;}\n'
++ '.device-services{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;}\n'
++ '.service-tag{font-family:\'JetBrains Mono\',monospace;font-size:12px;padding:2px 8px;border-radius:3px;background:var(--tag-bg);border:1px solid var(--tag-border);color:var(--accent);}\n'
++ '.child-count-badge{font-family:\'JetBrains Mono\',monospace;font-size:12px;padding:2px 8px;border-radius:3px;background:var(--blue-bg);color:var(--blue);margin-top:8px;display:inline-block;}\n'
++ '.detail-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(4px);}.detail-overlay.open{display:flex;}\n'
++ '.detail-panel{background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;width:85%;max-width:1000px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.5);}\n'
++ '.detail-header{display:flex;justify-content:space-between;align-items:flex-start;padding:22px;border-bottom:1px solid var(--border);}\n'
++ '.detail-body{padding:22px;}.detail-section{margin-bottom:20px;}\n'
++ '.detail-section-title{font-family:\'JetBrains Mono\',monospace;font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);}\n'
++ '.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}.detail-field-label{font-size:13px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;}.detail-field-value{font-family:\'JetBrains Mono\',monospace;font-size:15px;color:var(--text-primary);}\n'
++ '.detail-notes{font-size:15px;color:var(--text-secondary);line-height:1.7;white-space:pre-wrap;}\n'
++ '.btn{font-family:\'IBM Plex Sans\',sans-serif;font-size:15px;font-weight:500;padding:8px 16px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-tertiary);color:var(--text-primary);cursor:pointer;transition:all 0.15s ease;display:inline-flex;align-items:center;gap:6px;}.btn:hover{border-color:var(--border-active);background:var(--bg-card);}.btn-ghost{border-color:transparent;background:transparent;}.btn-ghost:hover{background:var(--bg-tertiary);}.btn-sm{padding:5px 10px;font-size:14px;}\n'
++ '.service-table{width:100%;border-collapse:collapse;}.service-table th{font-family:\'JetBrains Mono\',monospace;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);text-align:left;padding:6px 10px;border-bottom:1px solid var(--border);}.service-table td{font-family:\'JetBrains Mono\',monospace;font-size:14px;padding:8px 10px;color:var(--text-primary);border-bottom:1px solid var(--border);}.service-table td.svc-notes{color:var(--text-secondary);font-family:\'IBM Plex Sans\',sans-serif;}.service-table tr:last-child td{border-bottom:none;}\n'
++ '.child-device{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:6px;cursor:pointer;transition:all 0.15s;}.child-device:hover{border-color:var(--border-active);background:var(--bg-tertiary);}.child-device-name{font-family:\'JetBrains Mono\',monospace;font-size:14px;font-weight:500;}.child-device-info{font-size:13px;color:var(--text-secondary);}\n'
++ '.empty-state{text-align:center;padding:80px 20px;}.empty-icon{font-size:52px;margin-bottom:16px;opacity:0.3;}.empty-title{font-family:\'JetBrains Mono\',monospace;font-size:18px;color:var(--text-secondary);margin-bottom:8px;}.empty-text{font-size:15px;color:var(--text-muted);margin-bottom:20px;}\n'
++ '.footer{text-align:center;padding:24px 16px;border-top:1px solid var(--border);margin-top:40px;}.footer-link{font-family:\'JetBrains Mono\',monospace;font-size:13px;color:var(--text-muted);text-decoration:none;transition:color 0.15s;}.footer-link:hover{color:var(--accent);}\n'
++ '@media (max-width:640px){.header{padding:12px 16px;}.main{padding:16px;}.device-grid{grid-template-columns:1fr;}.detail-grid{grid-template-columns:1fr;}.toolbar{flex-direction:column;align-items:stretch;}.search-wrap{display:block;}.search-box{width:100%;}.stats-bar{flex-wrap:wrap;gap:16px;}}\n'
++ '</style>\n'
++ '</head>\n'
++ '<body>\n'
++ '<header class="header"><div class="logo">__SITE_NAME__</div></header>\n'
++ '<div class="main">\n'
++ '  <div class="stats-bar" id="statsBar"></div>\n'
++ '  <div class="toolbar">\n'
++ '    <div class="search-wrap" id="searchWrap">\n'
++ '      <input type="text" class="search-box" id="searchBox" placeholder="Search...">\n'
++ '      <button type="button" class="search-clear" id="searchClear" aria-label="Clear search" title="Clear search">✕</button>\n'
++ '    </div>\n'
++ '    <div class="filter-group" id="filterGroup"></div>\n'
++ '  </div>\n'
++ '  <div class="device-grid" id="deviceGrid"></div>\n'
++ '</div>\n'
++ '<footer class="footer"><a href="https://github.com/jeremehancock/homelab.md" target="_blank" rel="noopener" class="footer-link">Generated by homelab.md</a></footer>\n'
++ '<div class="detail-overlay" id="detailOverlay"><div class="detail-panel" id="detailPanel"></div></div>\n'
++ '<script>\n'
++ '"use strict";\n'
++ 'var DEVICES = __DEVICE_DATA__;\n'
++ 'var currentFilter = "all";\n'
++ 'function esc(str){if(!str&&str!==0)return "";var d=document.createElement("div");d.textContent=String(str);return d.innerHTML;}\n'
++ 'function getTypeClass(type){var map={server:"badge-server",vm:"badge-vm",container:"badge-container",network:"badge-network",storage:"badge-storage"};return map[type]||"badge-other";}\n'
++ 'function getDevice(id){for(var i=0;i<DEVICES.length;i++)if(DEVICES[i].id===id)return DEVICES[i];return null;}\n'
++ 'function getChildren(parentId){return DEVICES.filter(function(d){return d.parentId===parentId;});}\n'
++ 'function renderStats(){\n'
++ '  var hosts=DEVICES.filter(function(d){return !d.parentId;}).length;\n'
++ '  var vmsAndContainers=DEVICES.filter(function(d){return d.type==="vm"||d.type==="container";}).length;\n'
++ '  var totalServices=DEVICES.reduce(function(sum,d){return sum+(d.services?d.services.length:0);},0);\n'
++ '  document.getElementById("statsBar").innerHTML=\n'
++ '    \'<div class="stat"><span class="stat-value">\'+DEVICES.length+\'</span><span class="stat-label">Devices</span></div>\'+\n'
++ '    \'<div class="stat"><span class="stat-value">\'+hosts+\'</span><span class="stat-label">Hosts</span></div>\'+\n'
++ '    \'<div class="stat"><span class="stat-value">\'+vmsAndContainers+\'</span><span class="stat-label">VMs/Containers</span></div>\'+\n'
++ '    \'<div class="stat"><span class="stat-value">\'+totalServices+\'</span><span class="stat-label">Services</span></div>\';\n'
++ '}\n'
++ 'function renderFilters(){\n'
++ '  var seen={},types=["all"];\n'
++ '  DEVICES.forEach(function(d){if(!seen[d.type]){seen[d.type]=1;types.push(d.type);}});\n'
++ '  document.getElementById("filterGroup").innerHTML=types.map(function(t){\n'
++ '    return \'<button class="filter-btn \'+(t===currentFilter?"active":"")+\'" data-filter="\'+esc(t)+\'">\'+esc(t)+\'</button>\';\n'
++ '  }).join("");\n'
++ '}\n'
++ 'function setFilter(f){currentFilter=f;renderFilters();renderDevices();}\n'
++ 'function renderDevices(){\n'
++ '  var query=document.getElementById("searchBox").value.toLowerCase();\n'
++ '  var filtered=DEVICES.filter(function(d){\n'
++ '    if(currentFilter!=="all"&&d.type!==currentFilter)return false;\n'
++ '    if(query){\n'
++ '      var svcText=(d.services||[]).map(function(s){return s.name+" "+s.notes;}).join(" ");\n'
++ '      var storageText=(d.storage||[]).map(function(s){return s.type+" "+s.size+" "+s.notes;}).join(" ");\n'
++ '      var hay=[d.name,d.os,d.system,d.type,d.cpu,d.ram,d.notes,svcText,storageText].join(" ").toLowerCase();\n'
++ '      return hay.indexOf(query)!==-1;\n'
++ '    }\n'
++ '    return true;\n'
++ '  });\n'
++ '  filtered.sort(function(a,b){return (a.name||"").localeCompare(b.name||"",undefined,{sensitivity:"base"});});\n'
++ '  var grid=document.getElementById("deviceGrid");\n'
++ '  if(!filtered.length){\n'
++ '    grid.innerHTML=\'<div class="empty-state" style="grid-column:1/-1;"><div class="empty-icon">\\u29E1</div><div class="empty-title">\'+(DEVICES.length===0?"No devices":"No matches")+\'</div><div class="empty-text">\'+(DEVICES.length===0?"":"Try adjusting your search or filter.")+\'</div></div>\';\n'
++ '    return;\n'
++ '  }\n'
++ '  grid.innerHTML=filtered.map(function(d){\n'
++ '    var children=getChildren(d.id);\n'
++ '    var parent=d.parentId?getDevice(d.parentId):null;\n'
++ '    var svcs=d.services||[];\n'
++ '    var storage=d.storage||[];\n'
++ '    var storageHtml="";\n'
++ '    if(storage.length){\n'
++ '      var first=storage[0];\n'
++ '      var firstLabel=esc(first.size?first.type+" "+first.size:first.type);\n'
++ '      if(storage.length>2){storageHtml=firstLabel+", +"+(storage.length-1)+" more";}\n'
++ '      else{storageHtml=storage.map(function(s){return esc(s.size?s.type+" "+s.size:s.type);}).join(", ");}\n'
++ '    }\n'
++ '    return \'<div class="device-card \'+(children.length?"has-children":"")+\'" tabindex="0" role="button" data-id="\'+esc(d.id)+\'">\'+\n'
++ '      \'<div class="device-card-header"><div><div class="device-name">\'+esc(d.name)+\'</div></div>\'+\n'
++ '      \'<span class="device-type-badge \'+getTypeClass(d.type)+\'">\'+esc(d.type)+\'</span></div>\'+\n'
++ '      (parent?\'<div class="device-parent-link">on <strong>\'+esc(parent.name)+\'</strong></div>\':"")+\n'
++ '      \'<div class="device-meta">\'+\n'
++ '        (d.system?\'<span class="meta-item"><strong>System:</strong> \'+esc(d.system)+\'</span>\':"")+\n'
++ '        (d.os?\'<span class="meta-item"><strong>OS:</strong> \'+esc(d.os)+\'</span>\':"")+\n'
++ '        (d.cpu?\'<span class="meta-item"><strong>CPU:</strong> \'+esc(d.cpu)+\'</span>\':"")+\n'
++ '        (d.ram?\'<span class="meta-item"><strong>RAM:</strong> \'+esc(d.ram)+\'</span>\':"")+\n'
++ '        (storageHtml?\'<span class="meta-item"><strong>Storage:</strong> \'+storageHtml+\'</span>\':"")+\n'
++ '      \'</div>\'+\n'
++ '      (svcs.length?\'<div class="device-services">\'+\n'
++ '        svcs.slice(0,3).map(function(s){return \'<span class="service-tag">\'+esc(s.name)+\'</span>\';}).join("")+\n'
++ '        (svcs.length>3?\'<span class="service-tag">+\'+(svcs.length-3)+\' more</span>\':"")+\n'
++ '      \'</div>\':"")+\n'
++ '      (children.length?\'<span class="child-count-badge">\'+children.length+" "+(children.length===1?"child":"children")+\'</span>\':"")+\n'
++ '    \'</div>\';\n'
++ '  }).join("");\n'
++ '}\n'
++ 'function showDetail(id){\n'
++ '  var d=getDevice(id);if(!d)return;\n'
++ '  var children=getChildren(d.id);\n'
++ '  var parent=d.parentId?getDevice(d.parentId):null;\n'
++ '  var html=\'<div class="detail-header"><div>\'+\n'
++ '    \'<div style="font-family:\\\'JetBrains Mono\\\',monospace;font-size:22px;font-weight:700;margin-bottom:4px;">\'+esc(d.name)+\'</div>\'+\n'
++ '    \'<span class="device-type-badge \'+getTypeClass(d.type)+\'" style="display:inline-block;">\'+esc(d.type)+\'</span>\'+\n'
++ '    (parent?\' <span style="font-size:14px;color:var(--text-secondary);margin-left:10px;">on <strong>\'+esc(parent.name)+\'</strong></span>\':"")+\n'
++ '  \'</div><button class="btn btn-ghost btn-sm" data-action="close-detail">\\u2715</button></div>\';\n'
++ '  var hasOverview=d.system||d.os;\n'
++ '  var hasHardware=d.cpu||d.ram;\n'
++ '  html+=\'<div class="detail-body">\';\n'
++ '  if(hasOverview){\n'
++ '    html+=\'<div class="detail-section"><div class="detail-section-title">Overview</div><div class="detail-grid">\'+\n'
++ '      \'<div><div class="detail-field-label">System</div><div class="detail-field-value">\'+(esc(d.system)||"\\u2014")+\'</div></div>\'+\n'
++ '      \'<div><div class="detail-field-label">OS</div><div class="detail-field-value">\'+(esc(d.os)||"\\u2014")+\'</div></div>\'+\n'
++ '    \'</div></div>\';\n'
++ '  }\n'
++ '  if(hasHardware){\n'
++ '    html+=\'<div class="detail-section"><div class="detail-section-title">Hardware</div><div class="detail-grid">\'+\n'
++ '      \'<div><div class="detail-field-label">CPU</div><div class="detail-field-value">\'+(esc(d.cpu)||"\\u2014")+\'</div></div>\'+\n'
++ '      \'<div><div class="detail-field-label">RAM</div><div class="detail-field-value">\'+(esc(d.ram)||"\\u2014")+\'</div></div>\'+\n'
++ '    \'</div></div>\';\n'
++ '  }\n'
++ '  if(d.storage&&d.storage.length){\n'
++ '    html+=\'<div class="detail-section"><div class="detail-section-title">Storage (\'+d.storage.length+\')</div>\'+\n'
++ '      \'<table class="service-table"><thead><tr><th>Type / Device</th><th>Size</th><th>Notes</th></tr></thead><tbody>\'+\n'
++ '      d.storage.map(function(s){return \'<tr><td>\'+esc(s.type)+\'</td><td>\'+(esc(s.size)||"\\u2014")+\'</td><td class="svc-notes">\'+(esc(s.notes)||"\\u2014")+\'</td></tr>\';}).join("")+\n'
++ '      \'</tbody></table></div>\';\n'
++ '  }\n'
++ '  if(d.services&&d.services.length){\n'
++ '    html+=\'<div class="detail-section"><div class="detail-section-title">Services (\'+d.services.length+\')</div>\'+\n'
++ '      \'<table class="service-table"><thead><tr><th>Service</th><th>Notes</th></tr></thead><tbody>\'+\n'
++ '      d.services.map(function(s){return \'<tr><td>\'+esc(s.name)+\'</td><td class="svc-notes">\'+(esc(s.notes)||"\\u2014")+\'</td></tr>\';}).join("")+\n'
++ '      \'</tbody></table></div>\';\n'
++ '  }\n'
++ '  if(children.length){\n'
++ '    html+=\'<div class="detail-section"><div class="detail-section-title">Running on this host (\'+children.length+\')</div>\'+\n'
++ '      children.map(function(c){return \'<div class="child-device" data-detail-id="\'+esc(c.id)+\'"><div><div class="child-device-name">\'+esc(c.name)+\'</div><div class="child-device-info">\'+esc(c.type)+(c.services&&c.services.length?" \\u00B7 "+c.services.length+" services":"")+\'</div></div><span class="device-type-badge \'+getTypeClass(c.type)+\'">\'+esc(c.type)+\'</span></div>\';}).join("")+\n'
++ '    \'</div>\';\n'
++ '  }\n'
++ '  if(parent){\n'
++ '    html+=\'<div class="detail-section"><div class="detail-section-title">Host</div>\'+\n'
++ '      \'<div class="child-device" data-detail-id="\'+esc(parent.id)+\'"><div><div class="child-device-name">\'+esc(parent.name)+\'</div><div class="child-device-info">\'+esc(parent.type)+\'</div></div><span class="device-type-badge \'+getTypeClass(parent.type)+\'">\'+esc(parent.type)+\'</span></div>\'+\n'
++ '    \'</div>\';\n'
++ '  }\n'
++ '  if(d.notes){\n'
++ '    html+=\'<div class="detail-section"><div class="detail-section-title">Notes</div><div class="detail-notes">\'+esc(d.notes)+\'</div></div>\';\n'
++ '  }\n'
++ '  html+=\'</div>\';\n'
++ '  document.getElementById("detailPanel").innerHTML=html;\n'
++ '  document.getElementById("detailOverlay").classList.add("open");\n'
++ '}\n'
++ 'function closeDetail(){document.getElementById("detailOverlay").classList.remove("open");}\n'
++ 'document.getElementById("searchBox").addEventListener("input",function(){document.getElementById("searchWrap").classList.toggle("has-value",!!this.value);renderDevices();});\n'
++ 'document.getElementById("searchClear").addEventListener("click",function(){var b=document.getElementById("searchBox");b.value="";document.getElementById("searchWrap").classList.remove("has-value");b.focus();renderDevices();});\n'
++ 'document.getElementById("filterGroup").addEventListener("click",function(e){var b=e.target.closest("[data-filter]");if(b)setFilter(b.getAttribute("data-filter"));});\n'
++ 'document.getElementById("deviceGrid").addEventListener("click",function(e){var c=e.target.closest("[data-id]");if(c)showDetail(c.getAttribute("data-id"));});\n'
++ 'document.getElementById("deviceGrid").addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){var c=e.target.closest("[data-id]");if(c){e.preventDefault();showDetail(c.getAttribute("data-id"));}}});\n'
++ 'document.getElementById("detailPanel").addEventListener("click",function(e){var n=e.target.closest("[data-detail-id]");if(n){showDetail(n.getAttribute("data-detail-id"));return;}if(e.target.closest("[data-action=close-detail]"))closeDetail();});\n'
++ 'document.getElementById("detailOverlay").addEventListener("click",function(e){if(e.target.id==="detailOverlay")closeDetail();});\n'
++ 'document.addEventListener("keydown",function(e){if(e.key==="Escape")closeDetail();});\n'
++ 'renderStats();renderFilters();renderDevices();\n'
++ '<\/script>\n'
++ '</body>\n'
++ '</html>\n';
+
 function exportAll() {
   const devices = loadDevices();
   if (!devices.length) { toast('No devices to export', 'error'); return; }
@@ -1399,7 +1738,7 @@ document.getElementById('detailOverlay').addEventListener('click', (e) => {
   if (e.target === document.getElementById('detailOverlay')) closeDetail();
 });
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') { closeModal(); closeDetail(); }
+  if (e.key === 'Escape') { closeModal(); closeDetail(); closeHtmlExportModal(); }
 });
 
 refresh();
