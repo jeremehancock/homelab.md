@@ -92,6 +92,6 @@ A web browser. That's it.
 
 The app uses Google Fonts for typography (JetBrains Mono and IBM Plex Sans). These will load if you're online, but the app works fine without them — your browser will fall back to system monospace and sans-serif fonts.
 
-## Note
+## AI Assistance Disclosure
 
-This is a vibe coded app intended to be used completely offline. It was built conversationally with AI and is designed to be simple, practical, and self-contained. No frameworks, no build tools, no node_modules — just a single HTML file you can drop anywhere and open.
+This project was created with the help of AI.
