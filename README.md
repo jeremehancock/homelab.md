@@ -92,6 +92,6 @@ A web browser. That's it.
 
 The app uses Google Fonts for typography (JetBrains Mono and IBM Plex Sans). These will load if you're online, but the app works fine without them — your browser will fall back to system monospace and sans-serif fonts.
 
-## AI Assistance Disclosure
+## AI Disclosure
 
 This project was created with the help of AI.
