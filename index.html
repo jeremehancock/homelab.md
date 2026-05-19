@@ -494,7 +494,7 @@
       <div class="export-menu" id="exportMenu">
         <div class="export-menu-label">Format</div>
         <button onclick="exportAll(); closeExportMenu()">homelab.md Full</button>
-        <button onclick="exportCsv(); closeExportMenu()">homelab.csv</button>
+        <button onclick="exportCsv(); closeExportMenu()">homelab.csv Full</button>
         <hr>
         <button onclick="exportPublic(); closeExportMenu()">homelab.md Public</button>
         <button onclick="openHtmlExportModal(); closeExportMenu()">homelab.html Public</button>
@@ -1355,24 +1355,41 @@ function closeExportMenu() {
 document.addEventListener('click', closeExportMenu);
 
 // Public export helpers
+// Strips private/internal data from a string and returns the cleaned text.
+// Removed tokens are blanked (not replaced with placeholders); residual
+// whitespace and dangling separators are tidied so the output reads cleanly.
 function sanitizePublic(text) {
   if (typeof text !== 'string') return '';
-  return text
+  let out = text
     // URLs
-    .replace(/https?:\/\/[^\s)>\]"']*/gi, '[link removed]')
+    .replace(/https?:\/\/[^\s)>\]"']*/gi, '')
     // IPv4
-    .replace(/\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\b/g, '[private]')
-    // MAC addresses (before IPv6 so they don't get partially replaced)
-    .replace(/\b(?:[0-9A-Fa-f]{2}[:\-]){5}[0-9A-Fa-f]{2}\b/g, '[private]')
+    .replace(/\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\b/g, '')
+    // MAC addresses (before IPv6 so they don't get partially matched)
+    .replace(/\b(?:[0-9A-Fa-f]{2}[:\-]){5}[0-9A-Fa-f]{2}\b/g, '')
     // IPv6 (full and common compressed forms — pragmatic, not RFC-perfect)
-    .replace(/\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\b/g, '[private]')
-    .replace(/(?:[0-9a-fA-F]{1,4}:){1,7}:(?:[0-9a-fA-F]{1,4}(?::[0-9a-fA-F]{1,4})*)?/g, '[private]')
-    .replace(/::(?:[0-9a-fA-F]{1,4}(?::[0-9a-fA-F]{1,4})*)?/g, '[private]')
+    .replace(/\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\b/g, '')
+    .replace(/(?:[0-9a-fA-F]{1,4}:){1,7}:(?:[0-9a-fA-F]{1,4}(?::[0-9a-fA-F]{1,4})*)?/g, '')
+    .replace(/::(?:[0-9a-fA-F]{1,4}(?::[0-9a-fA-F]{1,4})*)?/g, '')
     // Internal/local hostnames (anything.lan, .local, .home.arpa, .internal, .lab, .home)
-    .replace(/\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:lan|local|home\.arpa|internal|lab|home)\b/gi, '[private]')
-    // Port numbers in plain text (e.g., "port 8080", ":8080" after a sanitized token)
-    .replace(/\bports?\s+\d{1,5}\b/gi, 'port [removed]')
-    .replace(/\[(?:private|link removed)\]:\d{1,5}\b/g, m => m.replace(/:\d+$/, ''));
+    .replace(/\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:lan|local|home\.arpa|internal|lab|home)\b/gi, '')
+    // "port 8080" mentions in free-text
+    .replace(/\bports?\s+\d{1,5}\b/gi, '')
+    // Stray :NNNN left behind (e.g., from "1.2.3.4:8080" → ":8080"), but not
+    // colon-segments of times like "12:34:56" — require the colon to NOT
+    // follow a digit.
+    .replace(/(?<!\d):\d{1,5}\b/g, '');
+
+  // Tidy: collapse internal whitespace, fix dangling separators, trim.
+  // Note: we intentionally do NOT strip trailing `.` — that would eat natural
+  // sentence-ending periods in notes.
+  out = out
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\s+([,;.])/g, '$1')      // " ," → ","
+    .replace(/([,;])(?:\s*\1)+/g, '$1') // ",," → ","
+    .replace(/^[\s,;]+|[\s,;]+$/g, '')
+    .trim();
+  return out;
 }
 
 function isPublicUrl(url) {
@@ -1400,31 +1417,34 @@ function deviceToPublicSection(d, allDevices) {
   const specs = [
     ['System', d.system], ['OS', d.os], ['CPU', d.cpu],
     ['RAM', d.ram],
-  ].filter(([, v]) => v && v !== '—');
+  ].map(([k, v]) => [k, sanitizePublic(v || '')]).filter(([, v]) => v);
 
   if (specs.length) {
     md += `| | |\n|---|---|\n`;
-    specs.forEach(([k, v]) => { md += `| ${k} | ${sanitizePublic(v)} |\n`; });
+    specs.forEach(([k, v]) => { md += `| ${k} | ${v} |\n`; });
     md += '\n';
   }
 
   if (Array.isArray(d.storage) && d.storage.length) {
-    md += `**Storage**\n\n| Drive | Size | Notes |\n|---|---|---|\n`;
-    d.storage.forEach(s => {
-      if (!s.type) return;
-      md += `| ${sanitizePublic(s.type)} | ${s.size || '—'} | ${sanitizePublic(s.notes) || '—'} |\n`;
-    });
-    md += '\n';
+    const rows = d.storage
+      .filter(s => s.type)
+      .map(s => ({ type: sanitizePublic(s.type), size: s.size || '', notes: sanitizePublic(s.notes || '') }))
+      .filter(s => s.type);
+    if (rows.length) {
+      md += `**Storage**\n\n| Drive | Size | Notes |\n|---|---|---|\n`;
+      rows.forEach(s => { md += `| ${s.type} | ${s.size || '—'} | ${s.notes || '—'} |\n`; });
+      md += '\n';
+    }
   }
 
   const services = (d.services || []).map(s => typeof s === 'string' ? { name: s, notes: '', url: '' } : s)
-    .filter(s => s.name && s.name !== '—');
+    .map(s => ({ name: sanitizePublic(s.name || ''), notes: sanitizePublic(s.notes || '') }))
+    .filter(s => s.name);
   if (services.length) {
     md += `**Services**\n\n`;
     services.forEach(s => {
-      const name = sanitizePublic(s.name);
-      const note = s.notes && s.notes !== '—' ? ' — ' + sanitizePublic(s.notes) : '';
-      md += `- ${name}${note}\n`;
+      const note = s.notes ? ' — ' + s.notes : '';
+      md += `- ${s.name}${note}\n`;
     });
     md += '\n';
   }
@@ -1432,16 +1452,24 @@ function deviceToPublicSection(d, allDevices) {
   if (children.length) {
     md += `**Running on this device**\n\n`;
     children.forEach(c => {
-      md += `- **${sanitizePublic(c.name)}** (${cap(c.type || 'device')})\n`;
-      if (c.os) md += `  - OS: ${sanitizePublic(c.os)}\n`;
-      const cServices = (c.services || []).map(s => typeof s === 'string' ? s : s.name).filter(n => n && n !== '—');
-      if (cServices.length) md += `  - Services: ${cServices.map(sanitizePublic).join(', ')}\n`;
-      if (c.notes && c.notes.trim()) md += `  - ${sanitizePublic(c.notes.trim())}\n`;
+      const cName = sanitizePublic(c.name || '');
+      if (!cName) return;
+      md += `- **${cName}** (${cap(c.type || 'device')})\n`;
+      const cOs = sanitizePublic(c.os || '');
+      if (cOs) md += `  - OS: ${cOs}\n`;
+      const cServices = (c.services || [])
+        .map(s => typeof s === 'string' ? s : s.name)
+        .map(n => sanitizePublic(n || ''))
+        .filter(Boolean);
+      if (cServices.length) md += `  - Services: ${cServices.join(', ')}\n`;
+      const cNotes = sanitizePublic((c.notes || '').trim());
+      if (cNotes) md += `  - ${cNotes}\n`;
     });
     md += '\n';
   }
 
-  if (d.notes && d.notes.trim()) md += `${sanitizePublic(d.notes.trim())}\n\n`;
+  const sanitizedNotes = sanitizePublic((d.notes || '').trim());
+  if (sanitizedNotes) md += `${sanitizedNotes}\n\n`;
 
   return md;
 }

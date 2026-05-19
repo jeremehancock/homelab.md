@@ -65,13 +65,13 @@ The **↓ Export → homelab.csv** option produces a flat `homelab.csv` with one
 
 The **↓ Export → homelab.md Public** option generates a `homelab-public.md` file intended for public use cases such as displaying your homelab on a public-facing website that supports Markdown. It produces a clean, readable summary of your homelab grouped by device type.
 
-Before writing the file, the export automatically sanitizes anything you wouldn't want to share publicly:
+Before writing the file, the export automatically removes anything you wouldn't want to share publicly. Removed values are scrubbed (left blank) rather than substituted with a placeholder, and surrounding whitespace and dangling separators are tidied so the output stays readable:
 
-- **IPv4 and IPv6 addresses** — replaced with `[private]` (full and compressed IPv6 forms like `2001:db8::1` and `::1` are matched)
-- **MAC addresses** — replaced with `[private]`
-- **Internal/local hostnames** — anything ending in `.lan`, `.local`, `.home.arpa`, `.internal`, `.lab`, or `.home` is replaced with `[private]`
-- **All URLs and links** — replaced with `[link removed]` (service URLs and anything embedded in notes)
-- **Port numbers** — omitted entirely from the services list; mentions like `port 8080` in free-text notes are replaced with `port [removed]`
+- **IPv4 and IPv6 addresses** — removed (full and compressed IPv6 forms like `2001:db8::1` and `::1` are matched)
+- **MAC addresses** — removed
+- **Internal/local hostnames** — anything ending in `.lan`, `.local`, `.home.arpa`, `.internal`, `.lab`, or `.home` is removed
+- **All URLs and links** — removed (service URLs and anything embedded in notes)
+- **Port numbers** — omitted entirely from the services list; mentions like `port 8080` in free-text notes are removed, as are stray `:8080`-style ports left after an IP/URL has been scrubbed
 - **Internal metadata** — device IDs, parent IDs, and timestamps are not included
 
 What remains is the hardware and software story of your homelab: device names, types, specs, storage, service names, and any notes you've written — all stripped of anything that could expose your internal network.
