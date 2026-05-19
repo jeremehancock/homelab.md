@@ -1184,7 +1184,7 @@ function confirmDelete(id) {
     </div>
     <div class="modal-body">
       <div class="confirm-dialog">
-        <p>Delete <strong>${esc(d.name)}</strong>?${children.length ? ` This will unlink ${children.length} child device${children.length > 1 ? 's' : ''}.` : ''} This cannot be undone.</p>
+        <p>Delete <strong>${esc(d.name)}</strong>?${children.length ? ` This will unlink ${children.length} child device${children.length > 1 ? 's' : ''}.` : ''}</p>
         <div class="btn-group">
           <button class="btn" onclick="closeDetail()">Cancel</button>
           <button class="btn btn-danger" onclick="deleteDevice('${id}')">Delete</button>
