@@ -368,6 +368,35 @@
   }
   .toast.success { border-color: var(--success); }
   .toast.error { border-color: var(--danger); }
+  .toast { display: inline-flex; align-items: center; gap: 4px; }
+  .toast-action {
+    margin-left: 8px;
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 2px 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-radius: 3px;
+  }
+  .toast-action:hover { background: var(--accent-glow); }
+
+  .btn.has-unsaved { position: relative; }
+  .btn.has-unsaved::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #e6a44b;
+    box-shadow: 0 0 5px rgba(230, 164, 75, 0.7);
+  }
 
   @keyframes slideIn {
     from { transform: translateX(20px); opacity: 0; }
@@ -461,10 +490,11 @@
   <div class="header-actions">
     <button class="btn btn-sm" onclick="importMarkdown()" title="Import .md files">↑ Import</button>
     <div class="export-wrap">
-      <button class="btn btn-sm" onclick="toggleExportMenu(event)" title="Export options">↓ Export ▾</button>
+      <button class="btn btn-sm" id="exportBtn" onclick="toggleExportMenu(event)" title="Export options">↓ Export ▾</button>
       <div class="export-menu" id="exportMenu">
         <div class="export-menu-label">Format</div>
         <button onclick="exportAll(); closeExportMenu()">homelab.md Full</button>
+        <button onclick="exportCsv(); closeExportMenu()">homelab.csv</button>
         <hr>
         <button onclick="exportPublic(); closeExportMenu()">homelab.md Public</button>
         <button onclick="openHtmlExportModal(); closeExportMenu()">homelab.html Public</button>
@@ -486,11 +516,11 @@
   <div class="device-grid" id="deviceGrid"></div>
 </div>
 
-<div class="modal-overlay" id="formModal">
+<div class="modal-overlay" id="formModal" role="dialog" aria-modal="true" aria-labelledby="formTitle">
   <div class="modal">
     <div class="modal-header">
       <div class="modal-title" id="formTitle">Add Device</div>
-      <button class="btn btn-ghost btn-sm" onclick="closeModal()">✕</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()" aria-label="Close">✕</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="editId">
@@ -615,15 +645,15 @@
   <a href="https://github.com/jeremehancock/homelab.md" target="_blank" class="footer-link">homelab.md</a>
 </footer>
 
-<div class="detail-overlay" id="detailOverlay">
+<div class="detail-overlay" id="detailOverlay" role="dialog" aria-modal="true" aria-label="Device details">
   <div class="detail-panel" id="detailPanel"></div>
 </div>
 
-<div class="modal-overlay" id="htmlExportModal">
+<div class="modal-overlay" id="htmlExportModal" role="dialog" aria-modal="true" aria-labelledby="htmlExportTitle">
   <div class="modal" style="max-width: 480px;">
     <div class="modal-header">
-      <div class="modal-title">Export HTML (Public)</div>
-      <button class="btn btn-ghost btn-sm" onclick="closeHtmlExportModal()">✕</button>
+      <div class="modal-title" id="htmlExportTitle">Export HTML (Public)</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeHtmlExportModal()" aria-label="Close">✕</button>
     </div>
     <div class="modal-body">
       <div class="form-row full">
@@ -637,6 +667,22 @@
     <div class="modal-footer">
       <button class="btn" onclick="closeHtmlExportModal()">Cancel</button>
       <button class="btn btn-primary" onclick="confirmExportHtml()">Generate HTML</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+  <div class="modal" style="max-width: 480px;">
+    <div class="modal-header">
+      <div class="modal-title" id="confirmTitle">Confirm</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeConfirm()" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <p id="confirmMessage" style="font-size:15px;color:var(--text-secondary);line-height:1.5;"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-primary" id="confirmOkBtn">Confirm</button>
     </div>
   </div>
 </div>
@@ -656,16 +702,27 @@ function generateId() { return Date.now().toString(36) + Math.random().toString(
 function getDevice(id, devices) { return (devices || loadDevices()).find(d => d.id === id); }
 function getChildren(parentId, devices) { return (devices || loadDevices()).filter(d => d.parentId === parentId); }
 
-function toast(message, type = 'success') {
+function toast(message, type = 'success', action = null) {
   const container = document.getElementById('toastContainer');
   const el = document.createElement('div');
   el.className = `toast ${type}`;
-  el.textContent = message;
-  container.appendChild(el);
-  setTimeout(() => {
+  const msg = document.createElement('span');
+  msg.textContent = message;
+  el.appendChild(msg);
+  const dismiss = () => {
     el.classList.add('removing');
     el.addEventListener('animationend', () => el.remove());
-  }, 2700);
+  };
+  if (action && typeof action.handler === 'function') {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'toast-action';
+    btn.textContent = action.label || 'Undo';
+    btn.addEventListener('click', () => { dismiss(); action.handler(); });
+    el.appendChild(btn);
+  }
+  container.appendChild(el);
+  setTimeout(dismiss, action ? 6000 : 2700);
 }
 
 function getTypeClass(type) {
@@ -807,11 +864,11 @@ let serviceRowData = [];
 function renderServiceRows() {
   document.getElementById('serviceRows').innerHTML = serviceRowData.map((s, i) => `
     <div class="service-entry">
-      <input type="text" class="form-input" placeholder="e.g. nginx" value="${esc(s.name)}" onchange="serviceRowData[${i}].name=this.value">
-      <input type="text" class="form-input" placeholder="80" value="${esc(s.port)}" onchange="serviceRowData[${i}].port=this.value">
-      <input type="text" class="form-input" placeholder="e.g. reverse proxy" value="${esc(s.notes)}" onchange="serviceRowData[${i}].notes=this.value">
-      <input type="text" class="form-input" placeholder="https://..." value="${esc(s.url)}" onchange="serviceRowData[${i}].url=this.value">
-      <button type="button" class="service-remove" onclick="removeServiceRow(${i})">✕</button>
+      <input type="text" class="form-input" placeholder="e.g. nginx" value="${esc(s.name)}" oninput="serviceRowData[${i}].name=this.value">
+      <input type="text" class="form-input" placeholder="80" value="${esc(s.port)}" oninput="serviceRowData[${i}].port=this.value">
+      <input type="text" class="form-input" placeholder="e.g. reverse proxy" value="${esc(s.notes)}" oninput="serviceRowData[${i}].notes=this.value">
+      <input type="text" class="form-input" placeholder="https://..." value="${esc(s.url)}" oninput="serviceRowData[${i}].url=this.value">
+      <button type="button" class="service-remove" onclick="removeServiceRow(${i})" aria-label="Remove service">✕</button>
     </div>
   `).join('');
 }
@@ -832,10 +889,10 @@ let storageRowData = [];
 function renderStorageRows() {
   document.getElementById('storageRows').innerHTML = storageRowData.map((s, i) => `
     <div class="storage-entry">
-      <input type="text" class="form-input" placeholder="e.g. NVMe SSD" value="${esc(s.type)}" onchange="storageRowData[${i}].type=this.value">
-      <input type="text" class="form-input" placeholder="1TB" value="${esc(s.size)}" onchange="storageRowData[${i}].size=this.value">
-      <input type="text" class="form-input" placeholder="e.g. Samsung 980 Pro, /dev/sda" value="${esc(s.notes)}" onchange="storageRowData[${i}].notes=this.value">
-      <button type="button" class="service-remove" onclick="removeStorageRow(${i})">✕</button>
+      <input type="text" class="form-input" placeholder="e.g. NVMe SSD" value="${esc(s.type)}" oninput="storageRowData[${i}].type=this.value">
+      <input type="text" class="form-input" placeholder="1TB" value="${esc(s.size)}" oninput="storageRowData[${i}].size=this.value">
+      <input type="text" class="form-input" placeholder="e.g. Samsung 980 Pro, /dev/sda" value="${esc(s.notes)}" oninput="storageRowData[${i}].notes=this.value">
+      <button type="button" class="service-remove" onclick="removeStorageRow(${i})" aria-label="Remove storage">✕</button>
     </div>
   `).join('');
 }
@@ -867,7 +924,7 @@ function openAddModal() {
   document.getElementById('editId').value = '';
   clearForm();
   populateParentDropdown();
-  document.getElementById('formModal').classList.add('open');
+  openModalEl(document.getElementById('formModal'), document.getElementById('fName'));
 }
 
 function openEditModal(id) {
@@ -891,6 +948,8 @@ function openEditModal(id) {
   populateParentDropdown(id);
   document.getElementById('fParent').value = d.parentId || '';
 
+  openModalEl(document.getElementById('formModal'), document.getElementById('fName'));
+
   // Load storage
   if (Array.isArray(d.storage)) {
     storageRowData = d.storage.map(s => ({ ...s }));
@@ -905,11 +964,9 @@ function openEditModal(id) {
     typeof s === 'string' ? { name: s, port: '', notes: '', url: '' } : { name: s.name || '', port: s.port || '', notes: s.notes || '', url: s.url || '' }
   );
   renderServiceRows();
-
-  document.getElementById('formModal').classList.add('open');
 }
 
-function closeModal() { document.getElementById('formModal').classList.remove('open'); }
+function closeModal() { closeModalEl(document.getElementById('formModal')); }
 
 function clearForm() {
   ['fName','fIp','fSystem','fOs','fCpu','fRam','fLocation','fNotes'].forEach(id => {
@@ -1104,10 +1161,13 @@ function showDetail(id) {
       <button class="btn btn-primary" onclick="closeDetail(); openEditModal('${d.id}')">Edit Device</button>
     </div>
   `;
-  document.getElementById('detailOverlay').classList.add('open');
+  openModalEl(document.getElementById('detailOverlay'));
 }
 
-function closeDetail() { document.getElementById('detailPanel').classList.remove('confirm-panel'); document.getElementById('detailOverlay').classList.remove('open'); }
+function closeDetail() {
+  document.getElementById('detailPanel').classList.remove('confirm-panel');
+  closeModalEl(document.getElementById('detailOverlay'));
+}
 
 function confirmDelete(id) {
   const devices = loadDevices();
@@ -1137,15 +1197,34 @@ function confirmDelete(id) {
 function deleteDevice(id) {
   let devices = loadDevices();
   const d = devices.find(x => x.id === id);
+  if (!d) return;
+  const orphans = devices.filter(c => c.parentId === id).map(c => c.id);
+  const index = devices.findIndex(x => x.id === id);
+  window._lastDeleted = { device: JSON.parse(JSON.stringify(d)), orphans, index };
   devices.forEach(c => { if (c.parentId === id) c.parentId = null; });
   devices = devices.filter(x => x.id !== id);
   saveDevices(devices);
   closeDetail();
-  toast(`${d?.name || 'Device'} deleted`);
+  toast(`${d.name} deleted`, 'success', { label: 'Undo', handler: undoDelete });
   refresh();
 }
 
 // Markdown export/import
+// Escape a value for a Markdown table cell: pipes become \|, newlines become spaces.
+function mdCell(v) {
+  if (v === undefined || v === null || v === '') return '—';
+  return String(v).replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\r?\n/g, ' ');
+}
+// Reverse of mdCell for parsing.
+function unmdCell(v) {
+  if (!v) return '';
+  return v.replace(/\\\|/g, '|').replace(/\\\\/g, '\\');
+}
+// Split a Markdown table row on unescaped pipes.
+function splitMdRow(line) {
+  return line.split(/(?<!\\)\|/);
+}
+
 function deviceToMarkdown(d, allDevices) {
   let md = `# ${d.name}\n\n`;
   const parent = d.parentId ? allDevices.find(x => x.id === d.parentId) : null;
@@ -1162,7 +1241,7 @@ function deviceToMarkdown(d, allDevices) {
     md += `| Type / Device | Size | Notes |\n`;
     md += `|---------------|------|-------|\n`;
     d.storage.forEach(s => {
-      md += `| ${s.type || '—'} | ${s.size || '—'} | ${s.notes || '—'} |\n`;
+      md += `| ${mdCell(s.type)} | ${mdCell(s.size)} | ${mdCell(s.notes)} |\n`;
     });
     md += `\n`;
   } else if (d.storage && !Array.isArray(d.storage)) {
@@ -1176,8 +1255,8 @@ function deviceToMarkdown(d, allDevices) {
     md += `| Service | Port | Notes | URL |\n`;
     md += `|---------|------|-------|-----|\n`;
     d.services.forEach(s => {
-      if (typeof s === 'string') { md += `| ${s} | — | — | — |\n`; }
-      else { md += `| ${s.name || '—'} | ${s.port || '—'} | ${s.notes || '—'} | ${s.url || '—'} |\n`; }
+      if (typeof s === 'string') { md += `| ${mdCell(s)} | — | — | — |\n`; }
+      else { md += `| ${mdCell(s.name)} | ${mdCell(s.port)} | ${mdCell(s.notes)} | ${mdCell(s.url)} |\n`; }
     });
   }
 
@@ -1216,9 +1295,9 @@ function markdownToDevice(md) {
   const storageTableMatch = md.match(/## Storage\s*\n[\s\S]*?\n\|[-\s|]+\|\n([\s\S]*?)(?=\n##|\n---|\n*$)/);
   if (storageTableMatch) {
     device.storage = storageTableMatch[1].split('\n').filter(l => l.trim().startsWith('|')).map(l => {
-      const cells = l.split('|').map(c => c.trim()).filter(Boolean);
+      const cells = splitMdRow(l).map(c => unmdCell(c.trim())).filter((c, i, arr) => i !== 0 && i !== arr.length - 1);
       return { type: cells[0] || '', size: cells[1] === '—' ? '' : (cells[1] || ''), notes: cells[2] === '—' ? '' : (cells[2] || '') };
-    }).filter(s => s.type);
+    }).filter(s => s.type && s.type !== '—');
   } else {
     // Fallback: old single-line storage field
     const oldStorageMatch = md.match(/-\s+\*\*Storage:\*\*\s*(.+)/i);
@@ -1232,9 +1311,9 @@ function markdownToDevice(md) {
   const tableMatch = md.match(/## Services\s*\n[\s\S]*?\n\|[-\s|]+\|\n([\s\S]*?)(?=\n##|\n---|\n*$)/);
   if (tableMatch) {
     device.services = tableMatch[1].split('\n').filter(l => l.trim().startsWith('|')).map(l => {
-      const cells = l.split('|').map(c => c.trim()).filter(Boolean);
+      const cells = splitMdRow(l).map(c => unmdCell(c.trim())).filter((c, i, arr) => i !== 0 && i !== arr.length - 1);
       return { name: cells[0] || '', port: cells[1] === '—' ? '' : (cells[1] || ''), notes: cells[2] === '—' ? '' : (cells[2] || ''), url: cells[3] === '—' ? '' : (cells[3] || '') };
-    }).filter(s => s.name);
+    }).filter(s => s.name && s.name !== '—');
   }
 
   if (!device.services.length) {
@@ -1279,9 +1358,21 @@ document.addEventListener('click', closeExportMenu);
 function sanitizePublic(text) {
   if (typeof text !== 'string') return '';
   return text
+    // URLs
     .replace(/https?:\/\/[^\s)>\]"']*/gi, '[link removed]')
+    // IPv4
     .replace(/\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\b/g, '[private]')
-    .replace(/\b(?:[0-9A-Fa-f]{2}[:\-]){5}[0-9A-Fa-f]{2}\b/g, '[private]');
+    // MAC addresses (before IPv6 so they don't get partially replaced)
+    .replace(/\b(?:[0-9A-Fa-f]{2}[:\-]){5}[0-9A-Fa-f]{2}\b/g, '[private]')
+    // IPv6 (full and common compressed forms — pragmatic, not RFC-perfect)
+    .replace(/\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\b/g, '[private]')
+    .replace(/(?:[0-9a-fA-F]{1,4}:){1,7}:(?:[0-9a-fA-F]{1,4}(?::[0-9a-fA-F]{1,4})*)?/g, '[private]')
+    .replace(/::(?:[0-9a-fA-F]{1,4}(?::[0-9a-fA-F]{1,4})*)?/g, '[private]')
+    // Internal/local hostnames (anything.lan, .local, .home.arpa, .internal, .lab, .home)
+    .replace(/\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:lan|local|home\.arpa|internal|lab|home)\b/gi, '[private]')
+    // Port numbers in plain text (e.g., "port 8080", ":8080" after a sanitized token)
+    .replace(/\bports?\s+\d{1,5}\b/gi, 'port [removed]')
+    .replace(/\[(?:private|link removed)\]:\d{1,5}\b/g, m => m.replace(/:\d+$/, ''));
 }
 
 function isPublicUrl(url) {
@@ -1400,12 +1491,11 @@ function openHtmlExportModal() {
   const devices = loadDevices();
   if (!devices.length) { toast('No devices to export', 'error'); return; }
   document.getElementById('htmlSiteName').value = '';
-  document.getElementById('htmlExportModal').classList.add('open');
-  setTimeout(() => document.getElementById('htmlSiteName').focus(), 50);
+  openModalEl(document.getElementById('htmlExportModal'), document.getElementById('htmlSiteName'));
 }
 
 function closeHtmlExportModal() {
-  document.getElementById('htmlExportModal').classList.remove('open');
+  closeModalEl(document.getElementById('htmlExportModal'));
 }
 
 function confirmExportHtml() {
@@ -1687,6 +1777,7 @@ function exportAll() {
   devices.forEach(d => { combined += deviceToMarkdown(d, devices) + '\n'; });
 
   downloadFile('homelab.md', combined, () => {
+    markExported();
     toast(`Exported ${devices.length} devices`);
   });
 }
@@ -1716,29 +1807,212 @@ function handleImport(event) {
       });
     });
 
-    devices.forEach(d => {
-      if (d._parentName && !d.parentId) {
-        const parent = devices.find(p => p.name === d._parentName);
-        if (parent) d.parentId = parent.id;
-      }
-      delete d._parentName;
-    });
+    if (!devices.length) {
+      toast('No devices found in file — nothing imported', 'error');
+      return;
+    }
 
-    saveDevices(devices);
-    refresh();
-    toast(`Imported ${devices.length} device${devices.length !== 1 ? 's' : ''}`);
+    const commit = () => {
+      devices.forEach(d => {
+        if (d._parentName && !d.parentId) {
+          const parent = devices.find(p => p.name === d._parentName);
+          if (parent) d.parentId = parent.id;
+        }
+        delete d._parentName;
+      });
+      saveDevices(devices);
+      markExported();
+      refresh();
+      toast(`Imported ${devices.length} device${devices.length !== 1 ? 's' : ''}`);
+    };
+
+    const existing = loadDevices();
+    if (existing.length) {
+      confirmAction({
+        title: 'Replace existing data?',
+        message: `Importing will replace your current ${existing.length} device${existing.length !== 1 ? 's' : ''} with ${devices.length} from the file. This cannot be undone.`,
+        confirmLabel: 'Replace',
+        danger: true,
+        onConfirm: commit,
+      });
+    } else {
+      commit();
+    }
   });
   event.target.value = '';
 }
 
-function refresh() { renderStats(); renderFilters(); renderDevices(); }
+function refresh() { renderStats(); renderFilters(); renderDevices(); updateExportIndicator(); }
 
-// formModal: no outside-click-to-close to prevent accidental data loss
+// --- Unsaved-since-last-export indicator ---
+const LAST_EXPORT_KEY = 'homelab_last_export';
+
+function markExported() {
+  localStorage.setItem(LAST_EXPORT_KEY, new Date().toISOString());
+  updateExportIndicator();
+}
+
+function hasUnsavedChanges() {
+  const devices = loadDevices();
+  if (!devices.length) return false;
+  const lastExport = localStorage.getItem(LAST_EXPORT_KEY);
+  if (!lastExport) return true;
+  return devices.some(d => d.updatedAt && d.updatedAt > lastExport);
+}
+
+function updateExportIndicator() {
+  const btn = document.getElementById('exportBtn');
+  if (!btn) return;
+  const unsaved = hasUnsavedChanges();
+  btn.classList.toggle('has-unsaved', unsaved);
+  btn.title = unsaved
+    ? 'Export options — unsaved changes since last full export'
+    : 'Export options';
+}
+
+// --- CSV export ---
+function exportCsv() {
+  const devices = loadDevices();
+  if (!devices.length) { toast('No devices to export', 'error'); return; }
+
+  const headers = ['Name', 'Type', 'Status', 'IP', 'System', 'OS', 'CPU', 'RAM', 'Storage', 'Location', 'Services', 'Notes', 'Parent', 'ID'];
+  const csvEscape = v => {
+    if (v === undefined || v === null) return '';
+    const s = String(v);
+    return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  };
+
+  const rows = devices.map(d => {
+    const parent = d.parentId ? devices.find(x => x.id === d.parentId) : null;
+    const storage = Array.isArray(d.storage)
+      ? d.storage.map(s => [s.type, s.size, s.notes].filter(Boolean).join(' ')).join('; ')
+      : (d.storage || '');
+    const services = (d.services || []).map(s => {
+      if (typeof s === 'string') return s;
+      return s.name + (s.port ? ':' + s.port : '');
+    }).join('; ');
+    return [
+      d.name, d.type, d.status, d.ip, d.system, d.os, d.cpu, d.ram,
+      storage, d.location, services, d.notes, parent ? parent.name : '', d.id,
+    ].map(csvEscape).join(',');
+  });
+
+  const csv = headers.join(',') + '\n' + rows.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'homelab.csv'; a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); toast('Exported CSV'); }, 500);
+}
+
+// --- Generic confirm modal ---
+let _confirmHandler = null;
+let _lastFocused = null;
+
+function confirmAction({ title, message, confirmLabel = 'Confirm', danger = false, onConfirm }) {
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMessage').textContent = message;
+  const ok = document.getElementById('confirmOkBtn');
+  ok.textContent = confirmLabel;
+  ok.className = 'btn ' + (danger ? 'btn-danger' : 'btn-primary');
+  _confirmHandler = onConfirm;
+  openModalEl(document.getElementById('confirmModal'), ok);
+}
+
+function closeConfirm() {
+  _confirmHandler = null;
+  closeModalEl(document.getElementById('confirmModal'));
+}
+
+document.getElementById('confirmOkBtn').addEventListener('click', () => {
+  const h = _confirmHandler;
+  closeConfirm();
+  if (h) h();
+});
+
+// --- Modal helpers (focus restore + open/close shims) ---
+function openModalEl(el, focusTarget) {
+  _lastFocused = document.activeElement;
+  el.classList.add('open');
+  setTimeout(() => {
+    const target = focusTarget || el.querySelector('input:not([type=hidden]), select, textarea, button');
+    if (target) target.focus();
+  }, 30);
+}
+
+function closeModalEl(el) {
+  el.classList.remove('open');
+  if (_lastFocused && typeof _lastFocused.focus === 'function') {
+    try { _lastFocused.focus(); } catch (_) {}
+  }
+  _lastFocused = null;
+}
+
+// --- Focus trap for the topmost open modal ---
+function getTopmostOpenModal() {
+  const candidates = [
+    document.getElementById('confirmModal'),
+    document.getElementById('htmlExportModal'),
+    document.getElementById('formModal'),
+    document.getElementById('detailOverlay'),
+  ];
+  return candidates.find(el => el && el.classList.contains('open')) || null;
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Tab') return;
+  const modal = getTopmostOpenModal();
+  if (!modal) return;
+  const focusables = Array.from(modal.querySelectorAll(
+    'input:not([type=hidden]):not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
+  )).filter(el => el.offsetParent !== null);
+  if (!focusables.length) return;
+  const first = focusables[0];
+  const last = focusables[focusables.length - 1];
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault();
+    first.focus();
+  }
+});
+
+// --- Undo-on-delete state (set by deleteDevice) ---
+window._lastDeleted = null;
+function undoDelete() {
+  const snapshot = window._lastDeleted;
+  if (!snapshot) return;
+  window._lastDeleted = null;
+  const devices = loadDevices();
+  const insertAt = Math.min(snapshot.index, devices.length);
+  devices.splice(insertAt, 0, snapshot.device);
+  devices.forEach(c => {
+    if (snapshot.orphans.indexOf(c.id) !== -1) c.parentId = snapshot.device.id;
+  });
+  saveDevices(devices);
+  refresh();
+  toast(`${snapshot.device.name} restored`);
+}
+
+// Outside-click closes detail overlay; form modal intentionally has no
+// outside-click-to-close to prevent accidental data loss.
 document.getElementById('detailOverlay').addEventListener('click', (e) => {
   if (e.target === document.getElementById('detailOverlay')) closeDetail();
 });
+document.getElementById('htmlExportModal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('htmlExportModal')) closeHtmlExportModal();
+});
+document.getElementById('confirmModal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('confirmModal')) closeConfirm();
+});
+
+// Escape closes detail/export/confirm modals only — NOT the form modal (prevents data loss).
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') { closeModal(); closeDetail(); closeHtmlExportModal(); }
+  if (e.key !== 'Escape') return;
+  if (document.getElementById('confirmModal').classList.contains('open')) { closeConfirm(); return; }
+  if (document.getElementById('htmlExportModal').classList.contains('open')) { closeHtmlExportModal(); return; }
+  if (document.getElementById('detailOverlay').classList.contains('open')) { closeDetail(); return; }
 });
 
 refresh();
