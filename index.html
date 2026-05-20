@@ -143,6 +143,7 @@
     color: var(--text-secondary);
     cursor: pointer; transition: all 0.15s ease;
     text-transform: uppercase; letter-spacing: 0.5px;
+    white-space: nowrap;
   }
   .filter-btn:hover { border-color: var(--border-active); color: var(--text-primary); }
   .filter-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
@@ -524,6 +525,17 @@
     .view-toggle .view-btn { flex: 1; text-align: center; justify-content: center; }
     .topology-clusters { grid-template-columns: 1fr; max-width: 320px; margin: 0 auto; justify-content: center; }
     .topo-cluster { width: 100%; height: auto; }
+    .filter-group {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      gap: 6px;
+      margin: 0 -16px;
+      padding: 2px 16px;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .filter-group::-webkit-scrollbar { display: none; }
+    .filter-btn { flex-shrink: 0; }
   }
 
   .footer {
@@ -1836,7 +1848,7 @@ const PUBLIC_HTML_TEMPLATE = '<!DOCTYPE html>\n'
 + '.search-clear:hover{color:var(--text-primary);background:var(--bg-tertiary);}\n'
 + '.search-wrap.has-value .search-clear{display:inline-flex;}\n'
 + '.filter-group{display:flex;gap:4px;flex-wrap:wrap;}\n'
-+ '.filter-btn{font-family:\'JetBrains Mono\',monospace;font-size:13px;padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;transition:all 0.15s ease;text-transform:uppercase;letter-spacing:0.5px;}\n'
++ '.filter-btn{font-family:\'JetBrains Mono\',monospace;font-size:13px;padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;transition:all 0.15s ease;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;}\n'
 + '.filter-btn:hover{border-color:var(--border-active);color:var(--text-primary);}.filter-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-glow);}\n'
 + '.stats-bar{display:flex;gap:24px;margin-bottom:24px;padding:14px 20px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);flex-wrap:wrap;}\n'
 + '.stat{display:flex;align-items:baseline;gap:6px;}.stat-value{font-family:\'JetBrains Mono\',monospace;font-size:24px;font-weight:700;color:var(--accent);}.stat-label{font-size:14px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;}\n'
@@ -1880,7 +1892,7 @@ const PUBLIC_HTML_TEMPLATE = '<!DOCTYPE html>\n'
 + '.topo-cluster .topo-edge{stroke:var(--border-active);stroke-width:1;fill:none;}\n'
 + '.topo-cluster .topo-accent{pointer-events:none;}\n'
 + '.topo-accent-server{fill:var(--accent);}.topo-accent-vm{fill:var(--blue);}.topo-accent-container{fill:var(--purple);}.topo-accent-network{fill:#e6b43c;}.topo-accent-storage{fill:#e67850;}.topo-accent-other{fill:#9696aa;}\n'
-+ '@media (max-width:640px){.header{padding:12px 16px;}.main{padding:16px;}.device-grid{grid-template-columns:1fr;}.detail-grid{grid-template-columns:1fr;}.toolbar{flex-direction:column;align-items:stretch;}.search-wrap{display:block;}.search-box{width:100%;}.stats-bar{flex-wrap:wrap;gap:16px;}.view-toggle{display:flex;}.view-toggle .view-btn{flex:1;text-align:center;justify-content:center;}.topology-clusters{grid-template-columns:1fr;max-width:320px;margin:0 auto;justify-content:center;}.topo-cluster{width:100%;height:auto;}}\n'
++ '@media (max-width:640px){.header{padding:12px 16px;}.main{padding:16px;}.device-grid{grid-template-columns:1fr;}.detail-grid{grid-template-columns:1fr;}.toolbar{flex-direction:column;align-items:stretch;}.search-wrap{display:block;}.search-box{width:100%;}.stats-bar{flex-wrap:wrap;gap:16px;}.view-toggle{display:flex;}.view-toggle .view-btn{flex:1;text-align:center;justify-content:center;}.topology-clusters{grid-template-columns:1fr;max-width:320px;margin:0 auto;justify-content:center;}.topo-cluster{width:100%;height:auto;}.filter-group{flex-wrap:nowrap;overflow-x:auto;gap:6px;margin:0 -16px;padding:2px 16px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}.filter-group::-webkit-scrollbar{display:none;}.filter-btn{flex-shrink:0;}}\n'
 + '</style>\n'
 + '</head>\n'
 + '<body>\n'
