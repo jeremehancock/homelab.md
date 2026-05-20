@@ -203,6 +203,61 @@
   .filter-select-option:hover { background: var(--bg-tertiary); color: var(--text-primary); }
   .filter-select-option.active { background: var(--accent-glow); color: var(--accent); }
 
+  .form-select-wrap { position: relative; width: 100%; min-width: 0; }
+  .form-select-toggle {
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    padding: 9px 12px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    cursor: pointer;
+    text-align: left;
+    outline: none;
+    transition: border-color 0.15s ease;
+  }
+  .form-select-toggle:hover { border-color: var(--border-active); }
+  .form-select-toggle:focus,
+  .form-select-toggle[aria-expanded="true"] { border-color: var(--accent); }
+  .form-select-value { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .form-select-chevron { color: var(--text-muted); flex-shrink: 0; transition: transform 0.15s; }
+  .form-select-toggle[aria-expanded="true"] .form-select-chevron { transform: rotate(180deg); }
+  .form-select-menu {
+    list-style: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    margin: 0;
+    padding: 4px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    z-index: 50;
+    max-height: 240px;
+    overflow-y: auto;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  }
+  .form-select-menu[hidden] { display: none; }
+  .form-select-option {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background 0.1s, color 0.1s;
+  }
+  .form-select-option:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+  .form-select-option.active { background: var(--accent-glow); color: var(--accent); }
+
   .stats-bar {
     display: flex; gap: 24px; margin-bottom: 24px;
     padding: 14px 20px; background: var(--bg-secondary);
@@ -711,14 +766,21 @@
         </div>
         <div class="form-group">
           <label class="form-label">Type</label>
-          <select class="form-select" id="fType">
-            <option value="server">Server</option>
-            <option value="vm">Virtual Machine</option>
-            <option value="container">Container / LXC</option>
-            <option value="network">Network Device</option>
-            <option value="storage">Storage</option>
-            <option value="other">Other</option>
-          </select>
+          <div class="form-select-wrap" id="fTypeWrap">
+            <button type="button" class="form-select-toggle" id="fTypeToggle" aria-haspopup="listbox" aria-expanded="false" onclick="toggleFormSelect('fType', event)">
+              <span class="form-select-value" id="fTypeLabel">Server</span>
+              <svg class="form-select-chevron" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M2 4l4 4 4-4"/></svg>
+            </button>
+            <ul class="form-select-menu" id="fTypeMenu" role="listbox" hidden>
+              <li class="form-select-option active" role="option" aria-selected="true" data-value="server" onclick="selectFormSelect('fType', this)">Server</li>
+              <li class="form-select-option" role="option" aria-selected="false" data-value="vm" onclick="selectFormSelect('fType', this)">Virtual Machine</li>
+              <li class="form-select-option" role="option" aria-selected="false" data-value="container" onclick="selectFormSelect('fType', this)">Container / LXC</li>
+              <li class="form-select-option" role="option" aria-selected="false" data-value="network" onclick="selectFormSelect('fType', this)">Network Device</li>
+              <li class="form-select-option" role="option" aria-selected="false" data-value="storage" onclick="selectFormSelect('fType', this)">Storage</li>
+              <li class="form-select-option" role="option" aria-selected="false" data-value="other" onclick="selectFormSelect('fType', this)">Other</li>
+            </ul>
+            <input type="hidden" id="fType" value="server">
+          </div>
         </div>
       </div>
 
@@ -729,9 +791,16 @@
         </div>
         <div class="form-group">
           <label class="form-label">Host / Parent Device</label>
-          <select class="form-select" id="fParent">
-            <option value="">— None (standalone) —</option>
-          </select>
+          <div class="form-select-wrap" id="fParentWrap">
+            <button type="button" class="form-select-toggle" id="fParentToggle" aria-haspopup="listbox" aria-expanded="false" onclick="toggleFormSelect('fParent', event)">
+              <span class="form-select-value" id="fParentLabel">— None (standalone) —</span>
+              <svg class="form-select-chevron" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M2 4l4 4 4-4"/></svg>
+            </button>
+            <ul class="form-select-menu" id="fParentMenu" role="listbox" hidden>
+              <li class="form-select-option active" role="option" aria-selected="true" data-value="" onclick="selectFormSelect('fParent', this)">— None (standalone) —</li>
+            </ul>
+            <input type="hidden" id="fParent" value="">
+          </div>
           <span class="form-hint">e.g. the Proxmox host this VM runs on</span>
         </div>
       </div>
@@ -750,11 +819,18 @@
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Status</label>
-          <select class="form-select" id="fStatus">
-            <option value="online">Online</option>
-            <option value="offline">Offline</option>
-            <option value="unknown">Unknown</option>
-          </select>
+          <div class="form-select-wrap" id="fStatusWrap">
+            <button type="button" class="form-select-toggle" id="fStatusToggle" aria-haspopup="listbox" aria-expanded="false" onclick="toggleFormSelect('fStatus', event)">
+              <span class="form-select-value" id="fStatusLabel">Online</span>
+              <svg class="form-select-chevron" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M2 4l4 4 4-4"/></svg>
+            </button>
+            <ul class="form-select-menu" id="fStatusMenu" role="listbox" hidden>
+              <li class="form-select-option active" role="option" aria-selected="true" data-value="online" onclick="selectFormSelect('fStatus', this)">Online</li>
+              <li class="form-select-option" role="option" aria-selected="false" data-value="offline" onclick="selectFormSelect('fStatus', this)">Offline</li>
+              <li class="form-select-option" role="option" aria-selected="false" data-value="unknown" onclick="selectFormSelect('fStatus', this)">Unknown</li>
+            </ul>
+            <input type="hidden" id="fStatus" value="online">
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">Location</label>
@@ -1267,16 +1343,82 @@ function removeStorageRow(i) {
 }
 
 function populateParentDropdown(excludeId = null) {
-  const select = document.getElementById('fParent');
+  const menu = document.getElementById('fParentMenu');
   const devices = loadDevices();
-  select.innerHTML = '<option value="">— None (standalone) —</option>';
+  const current = document.getElementById('fParent').value || '';
+  const opts = [{ value: '', label: '— None (standalone) —' }];
   devices.filter(d => d.id !== excludeId).forEach(d => {
-    const opt = document.createElement('option');
-    opt.value = d.id;
-    opt.textContent = `${d.name} (${d.type})`;
-    select.appendChild(opt);
+    opts.push({ value: d.id, label: `${d.name} (${d.type})` });
+  });
+  menu.innerHTML = opts.map(o =>
+    `<li class="form-select-option" role="option" aria-selected="false" data-value="${esc(o.value)}" onclick="selectFormSelect('fParent', this)">${esc(o.label)}</li>`
+  ).join('');
+  setFormSelectValue('fParent', current);
+}
+
+function toggleFormSelect(id, e) {
+  if (e) e.stopPropagation();
+  const wrap = document.getElementById(id + 'Wrap');
+  if (!wrap) return;
+  const btn = wrap.querySelector('.form-select-toggle');
+  const menu = wrap.querySelector('.form-select-menu');
+  const isOpen = btn.getAttribute('aria-expanded') === 'true';
+  closeAllFormSelects();
+  if (!isOpen) {
+    btn.setAttribute('aria-expanded', 'true');
+    menu.hidden = false;
+  }
+}
+
+function closeAllFormSelects() {
+  document.querySelectorAll('.form-select-wrap').forEach(wrap => {
+    const btn = wrap.querySelector('.form-select-toggle');
+    const menu = wrap.querySelector('.form-select-menu');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+    if (menu) menu.hidden = true;
   });
 }
+
+function selectFormSelect(id, optionEl) {
+  const value = optionEl.getAttribute('data-value') || '';
+  setFormSelectValue(id, value);
+  closeAllFormSelects();
+  const toggle = document.getElementById(id + 'Toggle');
+  if (toggle) toggle.focus();
+}
+
+function setFormSelectValue(id, value) {
+  const input = document.getElementById(id);
+  if (input) input.value = value;
+  const wrap = document.getElementById(id + 'Wrap');
+  if (!wrap) return;
+  const menu = wrap.querySelector('.form-select-menu');
+  const labelEl = document.getElementById(id + 'Label');
+  let chosenLabel = null;
+  let firstLabel = null;
+  menu.querySelectorAll('.form-select-option').forEach(opt => {
+    const optValue = opt.getAttribute('data-value') || '';
+    const isActive = optValue === value;
+    opt.classList.toggle('active', isActive);
+    opt.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    if (isActive) chosenLabel = opt.textContent;
+    if (firstLabel === null) firstLabel = opt.textContent;
+  });
+  if (labelEl) labelEl.textContent = chosenLabel || firstLabel || '';
+  if (input && chosenLabel === null) {
+    const firstOpt = menu.querySelector('.form-select-option');
+    if (firstOpt) {
+      input.value = firstOpt.getAttribute('data-value') || '';
+      firstOpt.classList.add('active');
+      firstOpt.setAttribute('aria-selected', 'true');
+    }
+  }
+}
+
+document.addEventListener('click', (e) => {
+  const inside = e.target.closest && e.target.closest('.form-select-wrap');
+  if (!inside) closeAllFormSelects();
+});
 
 function openAddModal() {
   document.getElementById('formTitle').textContent = 'Add Device';
@@ -1294,18 +1436,18 @@ function openEditModal(id) {
   document.getElementById('formTitle').textContent = 'Edit Device';
   document.getElementById('editId').value = id;
   document.getElementById('fName').value = d.name || '';
-  document.getElementById('fType').value = d.type || 'server';
+  setFormSelectValue('fType', d.type || 'server');
   document.getElementById('fIp').value = d.ip || '';
   document.getElementById('fSystem').value = d.system || '';
   document.getElementById('fOs').value = d.os || '';
-  document.getElementById('fStatus').value = d.status || 'unknown';
+  setFormSelectValue('fStatus', d.status || 'unknown');
   document.getElementById('fCpu').value = d.cpu || '';
   document.getElementById('fRam').value = d.ram || '';
   document.getElementById('fLocation').value = d.location || '';
   document.getElementById('fNotes').value = d.notes || '';
 
   populateParentDropdown(id);
-  document.getElementById('fParent').value = d.parentId || '';
+  setFormSelectValue('fParent', d.parentId || '');
 
   openModalEl(document.getElementById('formModal'), document.getElementById('fName'));
 
@@ -1331,9 +1473,9 @@ function clearForm() {
   ['fName','fIp','fSystem','fOs','fCpu','fRam','fLocation','fNotes'].forEach(id => {
     document.getElementById(id).value = '';
   });
-  document.getElementById('fType').value = 'server';
-  document.getElementById('fStatus').value = 'online';
-  document.getElementById('fParent').value = '';
+  setFormSelectValue('fType', 'server');
+  setFormSelectValue('fStatus', 'online');
+  setFormSelectValue('fParent', '');
   serviceRowData = [];
   renderServiceRows();
   storageRowData = [];
@@ -2542,6 +2684,8 @@ document.getElementById('confirmModal').addEventListener('click', (e) => {
 // Escape closes detail/export/confirm modals only — NOT the form modal (prevents data loss).
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
+  const openSelect = document.querySelector('.form-select-toggle[aria-expanded="true"]');
+  if (openSelect) { closeAllFormSelects(); openSelect.focus(); return; }
   if (document.getElementById('confirmModal').classList.contains('open')) { closeConfirm(); return; }
   if (document.getElementById('htmlExportModal').classList.contains('open')) { closeHtmlExportModal(); return; }
   if (document.getElementById('detailOverlay').classList.contains('open')) { closeDetail(); return; }
