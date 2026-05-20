@@ -1,0 +1,25 @@
+Name,Type,Status,IP,System,OS,CPU,RAM,Storage,Location,Services,Notes,Parent,ID
+anansi,server,online,192.168.86.76,Acer Aspire TC-1750-UR11,Ubuntu Server 22.04.3 LTS,Intel Core i5-12400 (up to 4.4GHz),32GB Corsair VENGEANCE LPX DDR4 3200MHz,WD Blue SN570 NVMe SSD 1TB OS Drive; WD Blue SN570 NVMe SSD 1TB Cache Drive via SABRENT PCIe Adapter; WD_Black 12TB Movies - Shucked WD Ultrastar DC HC520; WD Elements 14TB Movies 2 - Shucked WD140EDGZ; WD easystore 14TB TV Shows - Shucked WD140EDGZ; WD easystore 16TB TV Shows 2 - Shucked WD160EDGZ; Seagate Ironwolf 8TB TV Shows 3 - Internal Drive; WD easystore 20TB TV Shows 4 - Shucked WD200EDGZ; Seagate BarraCuda 2TB Music - ST2000DM008-2FR102,Sanctum,Plex Media Server:32400; Jellyfin:8096; Seerr:5056; Dispatcharr:9191; Tunarr:9001; Radarr:7878; Sonarr:8989; Lidarr:8686; Aurral:3001; LidaTube:5000; Prowlarr:9696; qBittorrent:8080; SABnzbd:6788; Gluetun; FlareSolverr:8191; Posteria:1818; Glimpse:9090; Tautulli:8282; Jellystat:3000; PlexTraktSync; JellyPlex-Watched; Plex Exporter:9594; Portainer:9443; Dozzle:8888; Scrutiny:8008; Lidarr Exportarr:9709; Radarr Exportarr:9708; Sonarr Exportarr:9707; Unpackerr (Movies); Unpackerr (TV); Sonarr (Private):9999; Radarr (Private):7979; Jackett:9117,"CLI Tools: yt-dlp, deno, abcde (CD ripping), Ludanta (Plex/Jellyfin now playing script)",,plexmedia1
+optimus,server,online,192.168.86.50,Dell OptiPlex 3060 Small Form Factor,Ubuntu Server 22.04.3 LTS,Intel Core i3-8100 @ 3.60GHz,32GB DDR4 SDRAM 2133 MT/s,WD Blue SN580 NVMe SSD 1TB OS Drive via SABRENT PCIe Adapter; Seagate BarraCuda HDD 4TB Backup Storage - Internal SATA,Sanctum,Portainer:9443; Dozzle:88888; Scrutiny:8096; Watchtower,,,monbackup1
+truenas,server,online,192.168.86.64,Dell Precision 5820,TrueNAS Community Edition,Intel Xeon W-2135 @ 3.70GHz,128GB DDR4 ECC SDRAM,Crucial SSD 500GB Boot Drive via Sedna PCIe SATA Adapter; Seagate IronWolf 4TB x2 RAIDZ2 Array; Seagate Internal 4TB RAIDZ2 Array; HGST Ultrastar 4TB x2 RAIDZ2 Array,Sanctum,Tailscale; Scrutiny:31054; Syncthing:20910; Pi-hole:20720; TrueNAS:80,"GPU: NVIDIA GeForce 8400 GS Rev. 3
+PSU: 950W
+Drive Bay: 3.5"" to 5.25"" Cage Adapter for additional mounting",,tnasstor01
+docker-vm,container,online,192.168.86.52,,Ubuntu Server 22.04,4 cores,16GB,,Sanctum,Paperless-ngx:30070; Nextcloud:20810; KaraKeep:3000; Portainer:9443; Dozzle:8888; Watchtower,,truenas,tnasstrvm1
+truenas-hosting,server,online,192.168.86.40,Custom (Fractal case),TrueNAS Community Edition,AMD Ryzen 5 3400G with Radeon Vega Graphics,64GB GIGASTONE Game PRO DDR4 3200MHz,ORICO M.2 NVMe SSD 128GB OS Drive - PCIe Gen3x4 2280; WD Blue Mobile Hard Drives 1TB x4 RAIDZ1 Array,Sanctum,Tailscale; Scrutiny:31054; TrueNAS:80,,,tnashost01
+coolify,container,online,192.168.86.58,,Ubuntu Focal AMD64,4 cores,16GB,,Sanctum,Coolify:8000,,truenas-hosting,tnashstvm1
+proxmox,server,online,192.168.86.48,Minisforum MS-A1,Proxmox VE,AMD Ryzen 7 8700G,64GB DDR5,NVMe SSD 512GB OS / Boot drive; NVMe SSD 1TB x2 VM Storage - Mirrored; WD Blue SN580 NVMe SSD 1TB VM Backups,Sanctum,proxmox:8006,,,proxmox001
+omega,vm,online,192.168.86.75,,Ubuntu Server 22.04,"8 (2 sockets, 4 cores) [x86-64-v4]",16GB,,Sanctum,Nginx Proxy Manager:81; Homarr:7575; Uptime Kuma:3001; Speed Tracker:8766; OpenSpeedTest:8765; Prometheus:30090; Portainer:9443; Dozzle:8888; Watchtower; AI Game Collection:38008,Uses Pushover for notifications,proxmox,proxmoxvm1
+pihole,container,online,192.168.86.65,,,2 cores,512MB,,Sanctum,Pi-hole:8080,Proxmox LXC container,proxmox,piholelxc1
+grafana,container,online,192.168.86.72,,,1 core,512MB,,Sanctum,Grafana:3000,Proxmox LXC container,proxmox,grafnalxc1
+nodered,container,online,192.168.86.71,,,1 core,1GB,,Sanctum,Node-RED:1880,Proxmox LXC container,proxmox,noderedlx1
+vaultwarden,container,online,192.168.86.66,,,4 cores,6GB,,Sanctum,Vaultwarden:8000,Proxmox LXC container,proxmox,vaultlxc01
+searxng,container,online,192.168.86.67,,,2 cores,2GB,,Sanctum,SearXNG:8888,Proxmox LXC container,proxmox,searxnglx1
+ATT Gateway,network,online,45.31.208.51,AT&T BGW-320,,,,,Sanctum,Fiber Gateway:80,"ISP: AT&T 1 GIG Fiber
+Mode: Passthrough Mode",,gateway001
+Nest Mesh WiFi,network,online,,Google Nest WiFi Pro (4-pack),,,,,,,Mesh WiFi network covering the home,,nestwifi01
+Main Switch,network,online,,TP-Link 16 Port Gigabit Ethernet Switch,,,,,Sanctum,,Primary network switch,,tplink1601
+Secondary Switch,network,online,,NETGEAR 5-Port Gigabit Ethernet Switch (GS105NA),,,,,Sanctum,,Additional network ports,,netgear051
+UPS 1,other,online,,CyberPower LX1500GAVR,,,,,Sanctum,,1500VA AVR 900 Watts UPS,,cyberups01
+UPS 2,other,online,,CyberPower CP1000PFCLCD,,,,,Sanctum,,1000VA Pure Sine Wave UPS,,cyberups02
+Storage Tower,storage,online,,Syba 8 Bay HDD Enclosure,,,,,Sanctum,,,anansi,mmuslkrj8ka766
+UPS 3,other,online,,APC BN450M-CA,,,,,Sanctum,,,,mpbcpuakv7f4ux
