@@ -955,7 +955,7 @@ function loadDevices() {
 function saveDevices(devices) { localStorage.setItem(STORAGE_KEY, JSON.stringify(devices)); }
 function generateId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
 function getDevice(id, devices) { return (devices || loadDevices()).find(d => d.id === id); }
-function getChildren(parentId, devices) { return (devices || loadDevices()).filter(d => d.parentId === parentId); }
+function getChildren(parentId, devices) { return (devices || loadDevices()).filter(d => d.parentId === parentId).sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' })); }
 
 function toast(message, type = 'success', action = null) {
   const container = document.getElementById('toastContainer');
@@ -1761,7 +1761,7 @@ function deviceToMarkdown(d, allDevices) {
     });
   }
 
-  const children = allDevices.filter(c => c.parentId === d.id);
+  const children = allDevices.filter(c => c.parentId === d.id).sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' }));
   if (children.length) {
     md += `\n## Running on this host\n\n`;
     children.forEach(c => { md += `- **${c.name}** (${c.type})${c.ip ? ' — ' + c.ip : ''}\n`; });
@@ -1904,7 +1904,7 @@ function isPublicUrl(url) {
 }
 
 function deviceToPublicSection(d, allDevices) {
-  const children = allDevices.filter(c => c.parentId === d.id);
+  const children = allDevices.filter(c => c.parentId === d.id).sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' }));
   const parent = d.parentId ? allDevices.find(x => x.id === d.parentId) : null;
 
   const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
@@ -2213,7 +2213,7 @@ const PUBLIC_HTML_TEMPLATE = '<!DOCTYPE html>\n'
 + 'function getTopoTypeIcon(type,x,y,size){var t=TYPE_ICON_PATHS[type]?type:"other";return \'<svg x="\'+x+\'" y="\'+y+\'" width="\'+size+\'" height="\'+size+\'" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" class="topo-type-icon topo-type-icon-\'+t+\'" aria-hidden="true">\'+TYPE_ICON_PATHS[t]+\'</svg>\';}\n'
 + 'function typeBadge(type){var t=type||"other";return \'<span class="device-type-badge \'+getTypeClass(t)+\'">\'+getTypeIcon(t)+\'<span>\'+esc(t)+\'</span></span>\';}\n'
 + 'function getDevice(id){for(var i=0;i<DEVICES.length;i++)if(DEVICES[i].id===id)return DEVICES[i];return null;}\n'
-+ 'function getChildren(parentId){return DEVICES.filter(function(d){return d.parentId===parentId;});}\n'
++ 'function getChildren(parentId){return DEVICES.filter(function(d){return d.parentId===parentId;}).sort(function(a,b){return (a.name||"").localeCompare(b.name||"",undefined,{sensitivity:"base"});});}\n'
 + 'function renderStats(){\n'
 + '  var hosts=DEVICES.filter(function(d){return !d.parentId;}).length;\n'
 + '  var vmsAndContainers=DEVICES.filter(function(d){return d.type==="vm"||d.type==="container";}).length;\n'
