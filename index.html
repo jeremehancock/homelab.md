@@ -147,38 +147,61 @@
   .filter-btn:hover { border-color: var(--border-active); color: var(--text-primary); }
   .filter-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
 
-  .filter-select { display: none; width: 100%; min-width: 0; }
-  .filter-select select {
+  .filter-select { display: none; position: relative; width: 100%; min-width: 0; }
+  .filter-select-toggle {
     width: 100%;
-    max-width: 100%;
-    min-width: 0;
     box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
     font-family: 'JetBrains Mono', monospace;
     font-size: 14px;
-    padding: 10px 36px 10px 14px;
+    padding: 10px 14px;
     border-radius: var(--radius);
     border: 1px solid var(--border);
-    background-color: var(--bg-secondary);
+    background: var(--bg-secondary);
     color: var(--text-primary);
     cursor: pointer;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    appearance: none;
-    -webkit-appearance: none;
-    color-scheme: dark;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path fill='none' stroke='%239696aa' stroke-width='1.5' d='M2 4l4 4 4-4'/></svg>");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
+    text-align: left;
+    transition: border-color 0.15s;
   }
-  .filter-select select:focus { outline: none; border-color: var(--accent); }
-  .filter-select select { accent-color: var(--accent); }
-  .filter-select option { background-color: var(--bg-secondary); color: var(--text-primary); }
-  .filter-select option:checked,
-  .filter-select option:hover {
-    background: linear-gradient(0deg, var(--accent-glow), var(--accent-glow));
-    background-color: var(--accent-glow);
-    color: var(--accent);
+  .filter-select-toggle:hover { border-color: var(--border-active); }
+  .filter-select-toggle[aria-expanded="true"] { border-color: var(--accent); }
+  .filter-select-chevron { color: var(--text-muted); flex-shrink: 0; transition: transform 0.15s; }
+  .filter-select-toggle[aria-expanded="true"] .filter-select-chevron { transform: rotate(180deg); }
+  .filter-select-menu {
+    list-style: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    margin: 0;
+    padding: 4px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    z-index: 50;
+    max-height: 240px;
+    overflow-y: auto;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   }
+  .filter-select-menu[hidden] { display: none; }
+  .filter-select-option {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: background 0.1s, color 0.1s;
+  }
+  .filter-select-option:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+  .filter-select-option.active { background: var(--accent-glow); color: var(--accent); }
 
   .stats-bar {
     display: flex; gap: 24px; margin-bottom: 24px;
@@ -647,7 +670,13 @@
       <button type="button" class="search-clear" id="searchClear" onclick="clearSearch()" aria-label="Clear search" title="Clear search">✕</button>
     </div>
     <div class="filter-group" id="filterGroup"></div>
-    <div class="filter-select"><select id="filterSelect" onchange="setFilter(this.value)" aria-label="Filter by type"></select></div>
+    <div class="filter-select" id="filterSelectWrap">
+      <button type="button" class="filter-select-toggle" id="filterToggle" aria-haspopup="listbox" aria-expanded="false" aria-label="Filter by type" onclick="toggleFilterMenu(event)">
+        <span id="filterValue">all</span>
+        <svg class="filter-select-chevron" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M2 4l4 4 4-4"/></svg>
+      </button>
+      <ul class="filter-select-menu" id="filterMenu" role="listbox" hidden></ul>
+    </div>
     <div class="view-toggle" role="tablist" aria-label="View mode">
       <button type="button" class="view-btn active" data-view="grid" onclick="setView('grid')" role="tab" aria-selected="true" title="Card view">Cards</button>
       <button type="button" class="view-btn" data-view="topology" onclick="setView('topology')" role="tab" aria-selected="false" title="Topology view">Topology</button>
@@ -894,10 +923,33 @@ function renderFilters() {
   document.getElementById('filterGroup').innerHTML = types.map(t =>
     `<button class="filter-btn ${t === active ? 'active' : ''}" onclick="setFilter('${t}')">${t}</button>`
   ).join('');
-  document.getElementById('filterSelect').innerHTML = types.map(t =>
-    `<option value="${t}" ${t === active ? 'selected' : ''}>${t}</option>`
+  document.getElementById('filterValue').textContent = active;
+  document.getElementById('filterMenu').innerHTML = types.map(t =>
+    `<li class="filter-select-option ${t === active ? 'active' : ''}" role="option" aria-selected="${t === active}" onclick="selectFilter('${t}')">${t}</li>`
   ).join('');
 }
+
+function toggleFilterMenu(e) {
+  if (e) e.stopPropagation();
+  const btn = document.getElementById('filterToggle');
+  const menu = document.getElementById('filterMenu');
+  const open = btn.getAttribute('aria-expanded') === 'true';
+  btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+  menu.hidden = open;
+}
+function closeFilterMenu() {
+  const btn = document.getElementById('filterToggle');
+  const menu = document.getElementById('filterMenu');
+  if (!btn || !menu) return;
+  btn.setAttribute('aria-expanded', 'false');
+  menu.hidden = true;
+}
+function selectFilter(t) { closeFilterMenu(); setFilter(t); }
+document.addEventListener('click', (e) => {
+  const wrap = document.getElementById('filterSelectWrap');
+  if (wrap && !wrap.contains(e.target)) closeFilterMenu();
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeFilterMenu(); });
 
 let currentFilter = 'all';
 function setFilter(f) {
@@ -1878,12 +1930,17 @@ const PUBLIC_HTML_TEMPLATE = '<!DOCTYPE html>\n'
 + '.filter-group{display:flex;gap:4px;flex-wrap:wrap;}\n'
 + '.filter-btn{font-family:\'JetBrains Mono\',monospace;font-size:13px;padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;transition:all 0.15s ease;text-transform:uppercase;letter-spacing:0.5px;}\n'
 + '.filter-btn:hover{border-color:var(--border-active);color:var(--text-primary);}.filter-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-glow);}\n'
-+ '.filter-select{display:none;width:100%;min-width:0;}\n'
-+ '.filter-select select{width:100%;max-width:100%;min-width:0;box-sizing:border-box;font-family:\'JetBrains Mono\',monospace;font-size:14px;padding:10px 36px 10px 14px;border-radius:var(--radius);border:1px solid var(--border);background-color:var(--bg-secondary);color:var(--text-primary);cursor:pointer;text-transform:uppercase;letter-spacing:0.5px;appearance:none;-webkit-appearance:none;color-scheme:dark;background-image:url("data:image/svg+xml;utf8,<svg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 12 12%27><path fill=%27none%27 stroke=%27%239696aa%27 stroke-width=%271.5%27 d=%27M2 4l4 4 4-4%27/></svg>");background-repeat:no-repeat;background-position:right 12px center;}\n'
-+ '.filter-select select:focus{outline:none;border-color:var(--accent);}\n'
-+ '.filter-select select{accent-color:var(--accent);}\n'
-+ '.filter-select option{background-color:var(--bg-secondary);color:var(--text-primary);}\n'
-+ '.filter-select option:checked,.filter-select option:hover{background:linear-gradient(0deg,var(--accent-glow),var(--accent-glow));background-color:var(--accent-glow);color:var(--accent);}\n'
++ '.filter-select{display:none;position:relative;width:100%;min-width:0;}\n'
++ '.filter-select-toggle{width:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:\'JetBrains Mono\',monospace;font-size:14px;padding:10px 14px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text-primary);cursor:pointer;text-transform:uppercase;letter-spacing:0.5px;text-align:left;transition:border-color 0.15s;}\n'
++ '.filter-select-toggle:hover{border-color:var(--border-active);}\n'
++ '.filter-select-toggle[aria-expanded="true"]{border-color:var(--accent);}\n'
++ '.filter-select-chevron{color:var(--text-muted);flex-shrink:0;transition:transform 0.15s;}\n'
++ '.filter-select-toggle[aria-expanded="true"] .filter-select-chevron{transform:rotate(180deg);}\n'
++ '.filter-select-menu{list-style:none;position:absolute;top:calc(100% + 4px);left:0;right:0;margin:0;padding:4px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);z-index:50;max-height:240px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.4);}\n'
++ '.filter-select-menu[hidden]{display:none;}\n'
++ '.filter-select-option{font-family:\'JetBrains Mono\',monospace;font-size:14px;padding:8px 12px;border-radius:4px;color:var(--text-secondary);cursor:pointer;text-transform:uppercase;letter-spacing:0.5px;transition:background 0.1s,color 0.1s;}\n'
++ '.filter-select-option:hover{background:var(--bg-tertiary);color:var(--text-primary);}\n'
++ '.filter-select-option.active{background:var(--accent-glow);color:var(--accent);}\n'
 + '.stats-bar{display:flex;gap:24px;margin-bottom:24px;padding:14px 20px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);flex-wrap:wrap;}\n'
 + '.stat{display:flex;align-items:baseline;gap:6px;}.stat-value{font-family:\'JetBrains Mono\',monospace;font-size:24px;font-weight:700;color:var(--accent);}.stat-label{font-size:14px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;}\n'
 + '.device-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:14px;}\n'
@@ -1939,7 +1996,10 @@ const PUBLIC_HTML_TEMPLATE = '<!DOCTYPE html>\n'
 + '      <button type="button" class="search-clear" id="searchClear" aria-label="Clear search" title="Clear search">✕</button>\n'
 + '    </div>\n'
 + '    <div class="filter-group" id="filterGroup"></div>\n'
-+ '    <div class="filter-select"><select id="filterSelect" aria-label="Filter by type"></select></div>\n'
++ '    <div class="filter-select" id="filterSelectWrap">\n'
++ '      <button type="button" class="filter-select-toggle" id="filterToggle" aria-haspopup="listbox" aria-expanded="false" aria-label="Filter by type"><span id="filterValue">all</span><svg class="filter-select-chevron" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M2 4l4 4 4-4"/></svg></button>\n'
++ '      <ul class="filter-select-menu" id="filterMenu" role="listbox" hidden></ul>\n'
++ '    </div>\n'
 + '    <div class="view-toggle" role="tablist" aria-label="View mode">\n'
 + '      <button type="button" class="view-btn active" data-view="grid" role="tab" aria-selected="true" title="Card view">Cards</button>\n'
 + '      <button type="button" class="view-btn" data-view="topology" role="tab" aria-selected="false" title="Topology view">Topology</button>\n'
@@ -1975,10 +2035,13 @@ const PUBLIC_HTML_TEMPLATE = '<!DOCTYPE html>\n'
 + '  document.getElementById("filterGroup").innerHTML=types.map(function(t){\n'
 + '    return \'<button class="filter-btn \'+(t===currentFilter?"active":"")+\'" data-filter="\'+esc(t)+\'">\'+esc(t)+\'</button>\';\n'
 + '  }).join("");\n'
-+ '  document.getElementById("filterSelect").innerHTML=types.map(function(t){\n'
-+ '    return \'<option value="\'+esc(t)+\'" \'+(t===currentFilter?"selected":"")+\'>\'+esc(t)+\'</option>\';\n'
++ '  document.getElementById("filterValue").textContent=currentFilter;\n'
++ '  document.getElementById("filterMenu").innerHTML=types.map(function(t){\n'
++ '    return \'<li class="filter-select-option \'+(t===currentFilter?"active":"")+\'" role="option" aria-selected="\'+(t===currentFilter)+\'" data-filter="\'+esc(t)+\'">\'+esc(t)+\'</li>\';\n'
 + '  }).join("");\n'
 + '}\n'
++ 'function toggleFilterMenu(){var b=document.getElementById("filterToggle"),m=document.getElementById("filterMenu");var open=b.getAttribute("aria-expanded")==="true";b.setAttribute("aria-expanded",open?"false":"true");m.hidden=open;}\n'
++ 'function closeFilterMenu(){var b=document.getElementById("filterToggle"),m=document.getElementById("filterMenu");if(!b||!m)return;b.setAttribute("aria-expanded","false");m.hidden=true;}\n'
 + 'function setFilter(f){currentFilter=f;renderFilters();renderDevices();if(currentView==="topology")renderTopology();}\n'
 + 'function getFilteredDevices(){\n'
 + '  var query=document.getElementById("searchBox").value.toLowerCase();\n'
@@ -2153,7 +2216,10 @@ const PUBLIC_HTML_TEMPLATE = '<!DOCTYPE html>\n'
 + 'document.getElementById("searchBox").addEventListener("input",function(){document.getElementById("searchWrap").classList.toggle("has-value",!!this.value);renderDevices();if(currentView==="topology")renderTopology();});\n'
 + 'document.getElementById("searchClear").addEventListener("click",function(){var b=document.getElementById("searchBox");b.value="";document.getElementById("searchWrap").classList.remove("has-value");b.focus();renderDevices();if(currentView==="topology")renderTopology();});\n'
 + 'document.getElementById("filterGroup").addEventListener("click",function(e){var b=e.target.closest("[data-filter]");if(b)setFilter(b.getAttribute("data-filter"));});\n'
-+ 'document.getElementById("filterSelect").addEventListener("change",function(){setFilter(this.value);});\n'
++ 'document.getElementById("filterToggle").addEventListener("click",function(e){e.stopPropagation();toggleFilterMenu();});\n'
++ 'document.getElementById("filterMenu").addEventListener("click",function(e){var o=e.target.closest("[data-filter]");if(o){closeFilterMenu();setFilter(o.getAttribute("data-filter"));}});\n'
++ 'document.addEventListener("click",function(e){var w=document.getElementById("filterSelectWrap");if(w&&!w.contains(e.target))closeFilterMenu();});\n'
++ 'document.addEventListener("keydown",function(e){if(e.key==="Escape")closeFilterMenu();});\n'
 + 'document.getElementById("deviceGrid").addEventListener("click",function(e){var c=e.target.closest("[data-id]");if(c)showDetail(c.getAttribute("data-id"));});\n'
 + 'document.getElementById("deviceGrid").addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){var c=e.target.closest("[data-id]");if(c){e.preventDefault();showDetail(c.getAttribute("data-id"));}}});\n'
 + 'document.getElementById("topologyView").addEventListener("click",function(e){var n=e.target.closest("[data-id]");if(n)showDetail(n.getAttribute("data-id"));});\n'
