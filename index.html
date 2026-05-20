@@ -147,26 +147,31 @@
   .filter-btn:hover { border-color: var(--border-active); color: var(--text-primary); }
   .filter-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
 
-  .filter-select { display: none; }
+  .filter-select { display: none; width: 100%; min-width: 0; }
   .filter-select select {
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
     font-family: 'JetBrains Mono', monospace;
     font-size: 14px;
     padding: 10px 36px 10px 14px;
     border-radius: var(--radius);
     border: 1px solid var(--border);
-    background: var(--bg-secondary);
+    background-color: var(--bg-secondary);
     color: var(--text-primary);
     cursor: pointer;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     appearance: none;
     -webkit-appearance: none;
+    color-scheme: dark;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path fill='none' stroke='%239696aa' stroke-width='1.5' d='M2 4l4 4 4-4'/></svg>");
     background-repeat: no-repeat;
     background-position: right 12px center;
   }
   .filter-select select:focus { outline: none; border-color: var(--accent); }
+  .filter-select option { background-color: var(--bg-secondary); color: var(--text-primary); }
 
   .stats-bar {
     display: flex; gap: 24px; margin-bottom: 24px;
@@ -1866,9 +1871,10 @@ const PUBLIC_HTML_TEMPLATE = '<!DOCTYPE html>\n'
 + '.filter-group{display:flex;gap:4px;flex-wrap:wrap;}\n'
 + '.filter-btn{font-family:\'JetBrains Mono\',monospace;font-size:13px;padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;transition:all 0.15s ease;text-transform:uppercase;letter-spacing:0.5px;}\n'
 + '.filter-btn:hover{border-color:var(--border-active);color:var(--text-primary);}.filter-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-glow);}\n'
-+ '.filter-select{display:none;}\n'
-+ '.filter-select select{width:100%;font-family:\'JetBrains Mono\',monospace;font-size:14px;padding:10px 36px 10px 14px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text-primary);cursor:pointer;text-transform:uppercase;letter-spacing:0.5px;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 12 12%27><path fill=%27none%27 stroke=%27%239696aa%27 stroke-width=%271.5%27 d=%27M2 4l4 4 4-4%27/></svg>");background-repeat:no-repeat;background-position:right 12px center;}\n'
++ '.filter-select{display:none;width:100%;min-width:0;}\n'
++ '.filter-select select{width:100%;max-width:100%;min-width:0;box-sizing:border-box;font-family:\'JetBrains Mono\',monospace;font-size:14px;padding:10px 36px 10px 14px;border-radius:var(--radius);border:1px solid var(--border);background-color:var(--bg-secondary);color:var(--text-primary);cursor:pointer;text-transform:uppercase;letter-spacing:0.5px;appearance:none;-webkit-appearance:none;color-scheme:dark;background-image:url("data:image/svg+xml;utf8,<svg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 12 12%27><path fill=%27none%27 stroke=%27%239696aa%27 stroke-width=%271.5%27 d=%27M2 4l4 4 4-4%27/></svg>");background-repeat:no-repeat;background-position:right 12px center;}\n'
 + '.filter-select select:focus{outline:none;border-color:var(--accent);}\n'
++ '.filter-select option{background-color:var(--bg-secondary);color:var(--text-primary);}\n'
 + '.stats-bar{display:flex;gap:24px;margin-bottom:24px;padding:14px 20px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);flex-wrap:wrap;}\n'
 + '.stat{display:flex;align-items:baseline;gap:6px;}.stat-value{font-family:\'JetBrains Mono\',monospace;font-size:24px;font-weight:700;color:var(--accent);}.stat-label{font-size:14px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;}\n'
 + '.device-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:14px;}\n'
