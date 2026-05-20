@@ -23,6 +23,7 @@ homelab.md gives you a clean interface to catalog every device in your homelab: 
 - **Unsaved-changes indicator** — A small dot appears on the **↓ Export** button whenever the in-browser data is newer than your last full export, so you don't forget to save changes back to the file
 - **Undo on delete** — Deleting a device shows a toast with an **Undo** button (~6 seconds) that fully restores the device and any parent links
 - **Safe import** — Importing prompts before replacing existing data and refuses to import a file with no parseable devices, so you can't accidentally wipe your inventory
+- **Topology view** — Toggle between Cards and Topology to see a tree-style SVG graph of parent → child relationships (servers with their VMs/containers below). Type filter and search apply to both views. Available in the main app and the public HTML export.
 - **Search and filter** — Filter by device type or search across hostnames, IPs, services, and notes
 - **Stats overview** — At-a-glance counts for devices, online status, hosts, VMs/LXCs, and total services
 - **Completely offline** — No server, no API calls, no CDN. Just one HTML file
@@ -83,7 +84,7 @@ The **↓ Export → homelab.html Public** option generates a `homelab.html` fil
 When you choose this export, you'll be prompted for a **Site Name** that replaces "homelab.md" in the top-left of the exported page (e.g. "My Homelab"). The exported file:
 
 - Uses the same theme and layout as the main app
-- Supports search, type filters, and the device detail modal
+- Supports search, type filters, the Cards / Topology view toggle, and the device detail modal
 - Has no add/edit/delete/import/export controls — it's strictly read-only
 - Applies the **same sanitization** as the public Markdown export (IPs, MAC addresses, URLs, ports, IDs, and timestamps are removed)
 - Is fully offline — no server, no API calls, just one HTML file

@@ -222,19 +222,24 @@
   .modal {
     background: var(--bg-secondary); border: 1px solid var(--border);
     border-radius: 8px; width: 85%; max-width: 1000px;
-    max-height: 90vh; overflow-y: auto;
+    max-height: 90vh; overflow: hidden;
+    display: flex; flex-direction: column;
     box-shadow: 0 20px 60px rgba(0,0,0,0.5);
   }
 
   .modal-header {
+    flex-shrink: 0;
     display: flex; justify-content: space-between; align-items: center;
     padding: 18px 22px; border-bottom: 1px solid var(--border);
+    background: var(--bg-secondary);
   }
   .modal-title { font-family: 'JetBrains Mono', monospace; font-size: 17px; font-weight: 600; }
-  .modal-body { padding: 22px; }
+  .modal-body { padding: 22px; flex: 1 1 auto; overflow-y: auto; min-height: 0; }
   .modal-footer {
+    flex-shrink: 0;
     display: flex; justify-content: flex-end; gap: 8px;
     padding: 16px 22px; border-top: 1px solid var(--border);
+    background: var(--bg-secondary);
   }
 
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
@@ -308,15 +313,18 @@
   .detail-panel {
     background: var(--bg-secondary); border: 1px solid var(--border);
     border-radius: 8px; width: 85%; max-width: 1000px;
-    max-height: 90vh; overflow-y: auto;
+    max-height: 90vh; overflow: hidden;
+    display: flex; flex-direction: column;
     box-shadow: 0 20px 60px rgba(0,0,0,0.5);
   }
 
   .detail-header {
+    flex-shrink: 0;
     display: flex; justify-content: space-between; align-items: flex-start;
     padding: 22px; border-bottom: 1px solid var(--border);
+    background: var(--bg-secondary);
   }
-  .detail-body { padding: 22px; }
+  .detail-body { padding: 22px; flex: 1 1 auto; overflow-y: auto; min-height: 0; }
   .detail-section { margin-bottom: 20px; }
 
   .detail-section-title {
@@ -329,7 +337,12 @@
   .detail-field-value { font-family: 'JetBrains Mono', monospace; font-size: 15px; color: var(--text-primary); }
   .detail-notes { font-size: 15px; color: var(--text-secondary); line-height: 1.7; white-space: pre-wrap; }
 
-  .detail-actions { display: flex; gap: 8px; padding: 16px 22px; border-top: 1px solid var(--border); }
+  .detail-actions {
+    flex-shrink: 0;
+    display: flex; gap: 8px; padding: 16px 22px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-secondary);
+  }
 
   .service-table { width: 100%; border-collapse: collapse; }
   .service-table th {
@@ -413,6 +426,89 @@
   .confirm-dialog p { font-size: 16px; color: var(--text-secondary); margin-bottom: 20px; }
   .confirm-dialog .btn-group { display: flex; justify-content: center; gap: 10px; }
 
+  /* View toggle (Cards / Topology) */
+  .view-toggle {
+    display: inline-flex;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .view-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 5px 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .view-btn:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+  .view-btn.active { color: var(--accent); background: var(--accent-glow); }
+  .view-btn + .view-btn { border-left: 1px solid var(--border); }
+
+  /* Topology view */
+  .topology-view { display: none; }
+  .topology-view.active { display: block; }
+  .topology-empty {
+    text-align: center; padding: 60px 20px;
+    color: var(--text-muted); font-size: 15px;
+  }
+  .topology-clusters {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 280px);
+    gap: 28px 24px;
+    align-items: start;
+    justify-content: center;
+  }
+  .topo-cluster { overflow: visible; display: block; }
+  .topo-cluster .topo-box {
+    fill: var(--bg-card);
+    stroke: var(--border);
+    stroke-width: 1;
+    transition: fill 0.15s, stroke 0.15s, filter 0.15s;
+  }
+  .topo-cluster .topo-node { cursor: pointer; }
+  .topo-cluster .topo-node:hover .topo-box,
+  .topo-cluster .topo-node:focus-visible .topo-box {
+    fill: var(--bg-tertiary);
+    stroke: var(--border-active);
+    filter: drop-shadow(0 0 8px rgba(57,197,187,0.35));
+  }
+  .topo-cluster .topo-node:focus { outline: none; }
+  .topo-cluster .topo-text-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    fill: var(--text-primary);
+    pointer-events: none;
+  }
+  .topo-cluster .topo-text-type {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    fill: var(--text-muted);
+    letter-spacing: 0.5px;
+    pointer-events: none;
+  }
+  .topo-cluster .topo-edge {
+    stroke: var(--border-active);
+    stroke-width: 1;
+    fill: none;
+  }
+  .topo-cluster .topo-status { stroke: none; pointer-events: none; }
+  .topo-status.status-online { fill: var(--success); }
+  .topo-status.status-offline { fill: var(--danger); }
+  .topo-status.status-unknown { fill: var(--text-muted); }
+  .topo-cluster .topo-accent { pointer-events: none; }
+  .topo-accent-server { fill: var(--accent); }
+  .topo-accent-vm { fill: var(--blue); }
+  .topo-accent-container { fill: var(--purple); }
+  .topo-accent-network { fill: #e6b43c; }
+  .topo-accent-storage { fill: #e67850; }
+  .topo-accent-other { fill: #9696aa; }
+
   @media (max-width: 640px) {
     .header { padding: 12px 16px; }
     .main { padding: 16px; }
@@ -424,6 +520,10 @@
     .search-box { width: 100%; }
     .stats-bar { flex-wrap: wrap; gap: 16px; }
     .detail-grid { grid-template-columns: 1fr; }
+    .view-toggle { display: flex; }
+    .view-toggle .view-btn { flex: 1; text-align: center; justify-content: center; }
+    .topology-clusters { grid-template-columns: 1fr; max-width: 320px; margin: 0 auto; justify-content: center; }
+    .topo-cluster { width: 100%; height: auto; }
   }
 
   .footer {
@@ -512,8 +612,13 @@
       <button type="button" class="search-clear" id="searchClear" onclick="clearSearch()" aria-label="Clear search" title="Clear search">✕</button>
     </div>
     <div class="filter-group" id="filterGroup"></div>
+    <div class="view-toggle" role="tablist" aria-label="View mode">
+      <button type="button" class="view-btn active" data-view="grid" onclick="setView('grid')" role="tab" aria-selected="true" title="Card view">Cards</button>
+      <button type="button" class="view-btn" data-view="topology" onclick="setView('topology')" role="tab" aria-selected="false" title="Topology view">Topology</button>
+    </div>
   </div>
   <div class="device-grid" id="deviceGrid"></div>
+  <div class="topology-view" id="topologyView" aria-live="polite"></div>
 </div>
 
 <div class="modal-overlay" id="formModal" role="dialog" aria-modal="true" aria-labelledby="formTitle">
@@ -755,12 +860,18 @@ function renderFilters() {
 }
 
 let currentFilter = 'all';
-function setFilter(f) { currentFilter = f; renderFilters(); renderDevices(); }
+function setFilter(f) {
+  currentFilter = f;
+  renderFilters();
+  renderDevices();
+  if (currentView === 'topology') renderTopology();
+}
 
 function onSearchInput() {
   const box = document.getElementById('searchBox');
   document.querySelector('.search-wrap').classList.toggle('has-value', !!box.value);
   renderDevices();
+  if (currentView === 'topology') renderTopology();
 }
 
 function clearSearch() {
@@ -769,24 +880,29 @@ function clearSearch() {
   document.querySelector('.search-wrap').classList.remove('has-value');
   box.focus();
   renderDevices();
+  if (currentView === 'topology') renderTopology();
 }
 
-function renderDevices() {
+function getFilteredDevices() {
   const devices = loadDevices();
   const query = document.getElementById('searchBox').value.toLowerCase();
-
-  let filtered = devices.filter(d => {
+  const filtered = devices.filter(d => {
     if (currentFilter !== 'all' && d.type !== currentFilter) return false;
     if (query) {
       const svcText = (d.services || []).map(s => typeof s === 'string' ? s : `${s.name} ${s.port} ${s.notes} ${s.url}`).join(' ');
       const storageText = Array.isArray(d.storage) ? d.storage.map(s => `${s.type} ${s.size} ${s.notes}`).join(' ') : (d.storage || '');
       const searchable = [d.name, d.ip, d.os, d.system, d.type, d.location, d.notes, svcText, storageText].join(' ').toLowerCase();
-      return searchable.includes(query);
+      if (!searchable.includes(query)) return false;
     }
     return true;
   });
-
   filtered.sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' }));
+  return filtered;
+}
+
+function renderDevices() {
+  const devices = loadDevices();
+  const filtered = getFilteredDevices();
 
   const grid = document.getElementById('deviceGrid');
 
@@ -840,6 +956,118 @@ function renderDevices() {
       ${children.length ? `<span class="child-count-badge">${children.length} ${children.length === 1 ? 'child' : 'children'}</span>` : ''}
     </div>`;
   }).join('');
+}
+
+// --- Topology view ---
+const VIEW_KEY = 'homelab_view';
+let currentView = (function () {
+  try { return localStorage.getItem(VIEW_KEY) || 'grid'; }
+  catch (_) { return 'grid'; }
+})();
+
+function applyViewUI() {
+  document.querySelectorAll('[data-view]').forEach(btn => {
+    const active = btn.dataset.view === currentView;
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+  document.getElementById('deviceGrid').style.display = currentView === 'grid' ? '' : 'none';
+  document.getElementById('topologyView').classList.toggle('active', currentView === 'topology');
+}
+
+function setView(v) {
+  currentView = v;
+  try { localStorage.setItem(VIEW_KEY, v); } catch (_) {}
+  applyViewUI();
+  if (v === 'topology') renderTopology();
+}
+
+function truncateLabel(s, n) {
+  s = String(s || '');
+  return s.length > n ? s.slice(0, n - 1) + '…' : s;
+}
+
+function topoBoxSvg(d, x, y, w, h, isParent, opts) {
+  const showStatus = opts && opts.showStatus !== false;
+  const status = d.status || 'unknown';
+  const dotX = x + 14;
+  const dotY = y + h / 2;
+  const textX = showStatus ? x + 26 : x + 14;
+  const nameY = y + h / 2 - 3;
+  const typeY = y + h / 2 + 13;
+  const nameMax = isParent ? 24 : 22;
+  const clipId = 'topo-clip-' + esc(d.id);
+  return `<g class="topo-node" data-id="${esc(d.id)}">
+    <defs><clipPath id="${clipId}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6"/></clipPath></defs>
+    <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" class="topo-box"/>
+    <rect x="${x}" y="${y}" width="3" height="${h}" class="topo-accent topo-accent-${d.type || 'other'}" clip-path="url(#${clipId})"/>
+    ${showStatus ? `<circle cx="${dotX}" cy="${dotY}" r="4" class="topo-status status-${status}"/>` : ''}
+    <text x="${textX}" y="${nameY}" class="topo-text-name">${esc(truncateLabel(d.name, nameMax))}</text>
+    <text x="${textX}" y="${typeY}" class="topo-text-type">${esc((d.type || 'other').toUpperCase())}</text>
+    <title>${esc(d.name)}${d.type ? ' (' + esc(d.type) + ')' : ''}</title>
+  </g>`;
+}
+
+function topologyClusterSvg(parent, children, opts) {
+  const w = 280;
+  const parentH = 60;
+  const childH = 50;
+  const childIndent = 26;
+  const childGap = 10;
+  const childTopGap = 20;
+  const childW = w - childIndent;
+  const pad = 6;
+
+  let svg = topoBoxSvg(parent, 0, 0, w, parentH, true, opts);
+
+  if (children.length) {
+    const trunkX = 11;
+    const trunkTop = parentH;
+    const lastChildCenter = parentH + childTopGap + (children.length - 1) * (childH + childGap) + childH / 2;
+    svg += `<line x1="${trunkX}" y1="${trunkTop}" x2="${trunkX}" y2="${lastChildCenter}" class="topo-edge"/>`;
+    children.forEach((c, i) => {
+      const y = parentH + childTopGap + i * (childH + childGap);
+      const cy = y + childH / 2;
+      svg += `<line x1="${trunkX}" y1="${cy}" x2="${childIndent}" y2="${cy}" class="topo-edge"/>`;
+      svg += topoBoxSvg(c, childIndent, y, childW, childH, false, opts);
+    });
+  }
+
+  const contentH = children.length
+    ? parentH + childTopGap + children.length * (childH + childGap) - childGap
+    : parentH;
+  const svgW = w + pad * 2;
+  const svgH = contentH + pad * 2;
+
+  return `<svg class="topo-cluster" viewBox="${-pad} ${-pad} ${svgW} ${svgH}" width="${svgW}" height="${svgH}" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="${esc(parent.name)}${children.length ? ' with ' + children.length + ' child device' + (children.length === 1 ? '' : 's') : ''}">${svg}</svg>`;
+}
+
+function renderTopology() {
+  const allDevices = loadDevices();
+  const filtered = getFilteredDevices();
+  const container = document.getElementById('topologyView');
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="topology-empty">${allDevices.length === 0 ? 'No devices yet.' : 'No matches for the current search/filter.'}</div>`;
+    return;
+  }
+
+  const filteredIds = new Set(filtered.map(d => d.id));
+  const roots = filtered.filter(d => !d.parentId);
+  const orphans = filtered.filter(d => d.parentId && !filteredIds.has(d.parentId));
+
+  const clusters = [];
+  roots.forEach(p => {
+    clusters.push({ parent: p, children: filtered.filter(c => c.parentId === p.id) });
+  });
+  orphans.forEach(o => clusters.push({ parent: o, children: [] }));
+
+  // Alphabetical by parent name.
+  clusters.sort((a, b) =>
+    (a.parent.name || '').localeCompare(b.parent.name || '', undefined, { sensitivity: 'base' })
+  );
+
+  container.innerHTML = `<div class="topology-clusters">${clusters.map(c => topologyClusterSvg(c.parent, c.children, { showStatus: true })).join('')}</div>`;
 }
 
 function esc(str) {
@@ -1625,9 +1853,9 @@ const PUBLIC_HTML_TEMPLATE = '<!DOCTYPE html>\n'
 + '.service-tag{font-family:\'JetBrains Mono\',monospace;font-size:12px;padding:2px 8px;border-radius:3px;background:var(--tag-bg);border:1px solid var(--tag-border);color:var(--accent);}\n'
 + '.child-count-badge{font-family:\'JetBrains Mono\',monospace;font-size:12px;padding:2px 8px;border-radius:3px;background:var(--blue-bg);color:var(--blue);margin-top:8px;display:inline-block;}\n'
 + '.detail-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(4px);}.detail-overlay.open{display:flex;}\n'
-+ '.detail-panel{background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;width:85%;max-width:1000px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.5);}\n'
-+ '.detail-header{display:flex;justify-content:space-between;align-items:flex-start;padding:22px;border-bottom:1px solid var(--border);}\n'
-+ '.detail-body{padding:22px;}.detail-section{margin-bottom:20px;}\n'
++ '.detail-panel{background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;width:85%;max-width:1000px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.5);}\n'
++ '.detail-header{flex-shrink:0;display:flex;justify-content:space-between;align-items:flex-start;padding:22px;border-bottom:1px solid var(--border);background:var(--bg-secondary);}\n'
++ '.detail-body{padding:22px;flex:1 1 auto;overflow-y:auto;min-height:0;}.detail-section{margin-bottom:20px;}\n'
 + '.detail-section-title{font-family:\'JetBrains Mono\',monospace;font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);}\n'
 + '.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}.detail-field-label{font-size:13px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;}.detail-field-value{font-family:\'JetBrains Mono\',monospace;font-size:15px;color:var(--text-primary);}\n'
 + '.detail-notes{font-size:15px;color:var(--text-secondary);line-height:1.7;white-space:pre-wrap;}\n'
@@ -1636,7 +1864,23 @@ const PUBLIC_HTML_TEMPLATE = '<!DOCTYPE html>\n'
 + '.child-device{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:6px;cursor:pointer;transition:all 0.15s;}.child-device:hover{border-color:var(--border-active);background:var(--bg-tertiary);}.child-device-name{font-family:\'JetBrains Mono\',monospace;font-size:14px;font-weight:500;}.child-device-info{font-size:13px;color:var(--text-secondary);}\n'
 + '.empty-state{text-align:center;padding:80px 20px;}.empty-icon{font-size:52px;margin-bottom:16px;opacity:0.3;}.empty-title{font-family:\'JetBrains Mono\',monospace;font-size:18px;color:var(--text-secondary);margin-bottom:8px;}.empty-text{font-size:15px;color:var(--text-muted);margin-bottom:20px;}\n'
 + '.footer{text-align:center;padding:24px 16px;border-top:1px solid var(--border);margin-top:40px;}.footer-link{font-family:\'JetBrains Mono\',monospace;font-size:13px;color:var(--text-muted);text-decoration:none;transition:color 0.15s;}.footer-link:hover{color:var(--accent);}\n'
-+ '@media (max-width:640px){.header{padding:12px 16px;}.main{padding:16px;}.device-grid{grid-template-columns:1fr;}.detail-grid{grid-template-columns:1fr;}.toolbar{flex-direction:column;align-items:stretch;}.search-wrap{display:block;}.search-box{width:100%;}.stats-bar{flex-wrap:wrap;gap:16px;}}\n'
++ '.view-toggle{display:inline-flex;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}\n'
++ '.view-btn{font-family:\'JetBrains Mono\',monospace;font-size:13px;padding:5px 12px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;transition:all 0.15s;text-transform:uppercase;letter-spacing:0.5px;}\n'
++ '.view-btn:hover{color:var(--text-primary);background:var(--bg-tertiary);}.view-btn.active{color:var(--accent);background:var(--accent-glow);}.view-btn+.view-btn{border-left:1px solid var(--border);}\n'
++ '.topology-view{display:none;}.topology-view.active{display:block;}\n'
++ '.topology-empty{text-align:center;padding:60px 20px;color:var(--text-muted);font-size:15px;}\n'
++ '.topology-clusters{display:grid;grid-template-columns:repeat(auto-fill,280px);gap:28px 24px;align-items:start;justify-content:center;}\n'
++ '.topo-cluster{overflow:visible;display:block;}\n'
++ '.topo-cluster .topo-box{fill:var(--bg-card);stroke:var(--border);stroke-width:1;transition:fill 0.15s,stroke 0.15s,filter 0.15s;}\n'
++ '.topo-cluster .topo-node{cursor:pointer;}\n'
++ '.topo-cluster .topo-node:hover .topo-box,.topo-cluster .topo-node:focus-visible .topo-box{fill:var(--bg-tertiary);stroke:var(--border-active);filter:drop-shadow(0 0 8px rgba(57,197,187,0.35));}\n'
++ '.topo-cluster .topo-node:focus{outline:none;}\n'
++ '.topo-cluster .topo-text-name{font-family:\'JetBrains Mono\',monospace;font-size:14px;font-weight:600;fill:var(--text-primary);pointer-events:none;}\n'
++ '.topo-cluster .topo-text-type{font-family:\'JetBrains Mono\',monospace;font-size:10px;fill:var(--text-muted);letter-spacing:0.5px;pointer-events:none;}\n'
++ '.topo-cluster .topo-edge{stroke:var(--border-active);stroke-width:1;fill:none;}\n'
++ '.topo-cluster .topo-accent{pointer-events:none;}\n'
++ '.topo-accent-server{fill:var(--accent);}.topo-accent-vm{fill:var(--blue);}.topo-accent-container{fill:var(--purple);}.topo-accent-network{fill:#e6b43c;}.topo-accent-storage{fill:#e67850;}.topo-accent-other{fill:#9696aa;}\n'
++ '@media (max-width:640px){.header{padding:12px 16px;}.main{padding:16px;}.device-grid{grid-template-columns:1fr;}.detail-grid{grid-template-columns:1fr;}.toolbar{flex-direction:column;align-items:stretch;}.search-wrap{display:block;}.search-box{width:100%;}.stats-bar{flex-wrap:wrap;gap:16px;}.view-toggle{display:flex;}.view-toggle .view-btn{flex:1;text-align:center;justify-content:center;}.topology-clusters{grid-template-columns:1fr;max-width:320px;margin:0 auto;justify-content:center;}.topo-cluster{width:100%;height:auto;}}\n'
 + '</style>\n'
 + '</head>\n'
 + '<body>\n'
@@ -1649,8 +1893,13 @@ const PUBLIC_HTML_TEMPLATE = '<!DOCTYPE html>\n'
 + '      <button type="button" class="search-clear" id="searchClear" aria-label="Clear search" title="Clear search">✕</button>\n'
 + '    </div>\n'
 + '    <div class="filter-group" id="filterGroup"></div>\n'
++ '    <div class="view-toggle" role="tablist" aria-label="View mode">\n'
++ '      <button type="button" class="view-btn active" data-view="grid" role="tab" aria-selected="true" title="Card view">Cards</button>\n'
++ '      <button type="button" class="view-btn" data-view="topology" role="tab" aria-selected="false" title="Topology view">Topology</button>\n'
++ '    </div>\n'
 + '  </div>\n'
 + '  <div class="device-grid" id="deviceGrid"></div>\n'
++ '  <div class="topology-view" id="topologyView" aria-live="polite"></div>\n'
 + '</div>\n'
 + '<footer class="footer"><a href="https://github.com/jeremehancock/homelab.md" target="_blank" rel="noopener" class="footer-link">Generated by homelab.md</a></footer>\n'
 + '<div class="detail-overlay" id="detailOverlay"><div class="detail-panel" id="detailPanel"></div></div>\n'
@@ -1658,6 +1907,7 @@ const PUBLIC_HTML_TEMPLATE = '<!DOCTYPE html>\n'
 + '"use strict";\n'
 + 'var DEVICES = __DEVICE_DATA__;\n'
 + 'var currentFilter = "all";\n'
++ 'var currentView = "grid";\n'
 + 'function esc(str){if(!str&&str!==0)return "";var d=document.createElement("div");d.textContent=String(str);return d.innerHTML;}\n'
 + 'function getTypeClass(type){var map={server:"badge-server",vm:"badge-vm",container:"badge-container",network:"badge-network",storage:"badge-storage"};return map[type]||"badge-other";}\n'
 + 'function getDevice(id){for(var i=0;i<DEVICES.length;i++)if(DEVICES[i].id===id)return DEVICES[i];return null;}\n'
@@ -1679,8 +1929,8 @@ const PUBLIC_HTML_TEMPLATE = '<!DOCTYPE html>\n'
 + '    return \'<button class="filter-btn \'+(t===currentFilter?"active":"")+\'" data-filter="\'+esc(t)+\'">\'+esc(t)+\'</button>\';\n'
 + '  }).join("");\n'
 + '}\n'
-+ 'function setFilter(f){currentFilter=f;renderFilters();renderDevices();}\n'
-+ 'function renderDevices(){\n'
++ 'function setFilter(f){currentFilter=f;renderFilters();renderDevices();if(currentView==="topology")renderTopology();}\n'
++ 'function getFilteredDevices(){\n'
 + '  var query=document.getElementById("searchBox").value.toLowerCase();\n'
 + '  var filtered=DEVICES.filter(function(d){\n'
 + '    if(currentFilter!=="all"&&d.type!==currentFilter)return false;\n'
@@ -1693,6 +1943,10 @@ const PUBLIC_HTML_TEMPLATE = '<!DOCTYPE html>\n'
 + '    return true;\n'
 + '  });\n'
 + '  filtered.sort(function(a,b){return (a.name||"").localeCompare(b.name||"",undefined,{sensitivity:"base"});});\n'
++ '  return filtered;\n'
++ '}\n'
++ 'function renderDevices(){\n'
++ '  var filtered=getFilteredDevices();\n'
 + '  var grid=document.getElementById("deviceGrid");\n'
 + '  if(!filtered.length){\n'
 + '    grid.innerHTML=\'<div class="empty-state" style="grid-column:1/-1;"><div class="empty-icon">\\u29E1</div><div class="empty-title">\'+(DEVICES.length===0?"No devices":"No matches")+\'</div><div class="empty-text">\'+(DEVICES.length===0?"":"Try adjusting your search or filter.")+\'</div></div>\';\n'
@@ -1728,6 +1982,69 @@ const PUBLIC_HTML_TEMPLATE = '<!DOCTYPE html>\n'
 + '      (children.length?\'<span class="child-count-badge">\'+children.length+" "+(children.length===1?"child":"children")+\'</span>\':"")+\n'
 + '    \'</div>\';\n'
 + '  }).join("");\n'
++ '}\n'
++ 'function truncateLabel(s,n){s=String(s||"");return s.length>n?s.slice(0,n-1)+"\\u2026":s;}\n'
++ 'function topoBoxSvg(d,x,y,w,h,isParent){\n'
++ '  var textX=x+14;\n'
++ '  var nameY=y+h/2-3;\n'
++ '  var typeY=y+h/2+13;\n'
++ '  var nameMax=isParent?24:22;\n'
++ '  var clipId="topo-clip-"+esc(d.id);\n'
++ '  return \'<g class="topo-node" data-id="\'+esc(d.id)+\'">\'+\n'
++ '    \'<defs><clipPath id="\'+clipId+\'"><rect x="\'+x+\'" y="\'+y+\'" width="\'+w+\'" height="\'+h+\'" rx="6"/></clipPath></defs>\'+\n'
++ '    \'<rect x="\'+x+\'" y="\'+y+\'" width="\'+w+\'" height="\'+h+\'" rx="6" class="topo-box"/>\'+\n'
++ '    \'<rect x="\'+x+\'" y="\'+y+\'" width="3" height="\'+h+\'" class="topo-accent topo-accent-\'+(d.type||"other")+\'" clip-path="url(#\'+clipId+\')"/>\'+\n'
++ '    \'<text x="\'+textX+\'" y="\'+nameY+\'" class="topo-text-name">\'+esc(truncateLabel(d.name,nameMax))+\'</text>\'+\n'
++ '    \'<text x="\'+textX+\'" y="\'+typeY+\'" class="topo-text-type">\'+esc((d.type||"other").toUpperCase())+\'</text>\'+\n'
++ '    \'<title>\'+esc(d.name)+(d.type?" (\'+esc(d.type)+\')":"")+\'</title>\'+\n'
++ '  \'</g>\';\n'
++ '}\n'
++ 'function topologyClusterSvg(parent,children){\n'
++ '  var w=280,parentH=60,childH=50,childIndent=26,childGap=10,childTopGap=20,pad=6;\n'
++ '  var childW=w-childIndent;\n'
++ '  var svg=topoBoxSvg(parent,0,0,w,parentH,true);\n'
++ '  if(children.length){\n'
++ '    var trunkX=11,trunkTop=parentH;\n'
++ '    var lastChildCenter=parentH+childTopGap+(children.length-1)*(childH+childGap)+childH/2;\n'
++ '    svg+=\'<line x1="\'+trunkX+\'" y1="\'+trunkTop+\'" x2="\'+trunkX+\'" y2="\'+lastChildCenter+\'" class="topo-edge"/>\';\n'
++ '    children.forEach(function(c,i){\n'
++ '      var y=parentH+childTopGap+i*(childH+childGap);\n'
++ '      var cy=y+childH/2;\n'
++ '      svg+=\'<line x1="\'+trunkX+\'" y1="\'+cy+\'" x2="\'+childIndent+\'" y2="\'+cy+\'" class="topo-edge"/>\';\n'
++ '      svg+=topoBoxSvg(c,childIndent,y,childW,childH,false);\n'
++ '    });\n'
++ '  }\n'
++ '  var contentH=children.length?parentH+childTopGap+children.length*(childH+childGap)-childGap:parentH;\n'
++ '  var svgW=w+pad*2,svgH=contentH+pad*2;\n'
++ '  var ariaLabel=esc(parent.name)+(children.length?" with "+children.length+" child device"+(children.length===1?"":"s"):"");\n'
++ '  return \'<svg class="topo-cluster" viewBox="\'+(-pad)+\' \'+(-pad)+\' \'+svgW+\' \'+svgH+\'" width="\'+svgW+\'" height="\'+svgH+\'" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="\'+ariaLabel+\'">\'+svg+\'</svg>\';\n'
++ '}\n'
++ 'function renderTopology(){\n'
++ '  var filtered=getFilteredDevices();\n'
++ '  var container=document.getElementById("topologyView");\n'
++ '  if(!filtered.length){container.innerHTML=\'<div class="topology-empty">\'+(DEVICES.length===0?"No devices yet.":"No matches for the current search/filter.")+\'</div>\';return;}\n'
++ '  var filteredIds={};filtered.forEach(function(d){filteredIds[d.id]=1;});\n'
++ '  var roots=filtered.filter(function(d){return !d.parentId;});\n'
++ '  var orphans=filtered.filter(function(d){return d.parentId&&!filteredIds[d.parentId];});\n'
++ '  var clusters=[];\n'
++ '  roots.forEach(function(p){clusters.push({parent:p,children:filtered.filter(function(c){return c.parentId===p.id;})});});\n'
++ '  orphans.forEach(function(o){clusters.push({parent:o,children:[]});});\n'
++ '  clusters.sort(function(a,b){return (a.parent.name||"").localeCompare(b.parent.name||"",undefined,{sensitivity:"base"});});\n'
++ '  container.innerHTML=\'<div class="topology-clusters">\'+clusters.map(function(c){return topologyClusterSvg(c.parent,c.children);}).join("")+\'</div>\';\n'
++ '}\n'
++ 'var VIEW_KEY="homelab_view";\n'
++ 'try{var savedView=localStorage.getItem(VIEW_KEY);if(savedView==="topology"||savedView==="grid")currentView=savedView;}catch(_){}\n'
++ 'function applyViewUI(){\n'
++ '  var btns=document.querySelectorAll("[data-view]");\n'
++ '  for(var i=0;i<btns.length;i++){var active=btns[i].getAttribute("data-view")===currentView;btns[i].classList.toggle("active",active);btns[i].setAttribute("aria-selected",active?"true":"false");}\n'
++ '  document.getElementById("deviceGrid").style.display=currentView==="grid"?"":"none";\n'
++ '  document.getElementById("topologyView").classList.toggle("active",currentView==="topology");\n'
++ '}\n'
++ 'function setView(v){\n'
++ '  currentView=v;\n'
++ '  try{localStorage.setItem(VIEW_KEY,v);}catch(_){}\n'
++ '  applyViewUI();\n'
++ '  if(v==="topology")renderTopology();\n'
 + '}\n'
 + 'function showDetail(id){\n'
 + '  var d=getDevice(id);if(!d)return;\n'
@@ -1783,15 +2100,17 @@ const PUBLIC_HTML_TEMPLATE = '<!DOCTYPE html>\n'
 + '  document.getElementById("detailOverlay").classList.add("open");\n'
 + '}\n'
 + 'function closeDetail(){document.getElementById("detailOverlay").classList.remove("open");}\n'
-+ 'document.getElementById("searchBox").addEventListener("input",function(){document.getElementById("searchWrap").classList.toggle("has-value",!!this.value);renderDevices();});\n'
-+ 'document.getElementById("searchClear").addEventListener("click",function(){var b=document.getElementById("searchBox");b.value="";document.getElementById("searchWrap").classList.remove("has-value");b.focus();renderDevices();});\n'
++ 'document.getElementById("searchBox").addEventListener("input",function(){document.getElementById("searchWrap").classList.toggle("has-value",!!this.value);renderDevices();if(currentView==="topology")renderTopology();});\n'
++ 'document.getElementById("searchClear").addEventListener("click",function(){var b=document.getElementById("searchBox");b.value="";document.getElementById("searchWrap").classList.remove("has-value");b.focus();renderDevices();if(currentView==="topology")renderTopology();});\n'
 + 'document.getElementById("filterGroup").addEventListener("click",function(e){var b=e.target.closest("[data-filter]");if(b)setFilter(b.getAttribute("data-filter"));});\n'
 + 'document.getElementById("deviceGrid").addEventListener("click",function(e){var c=e.target.closest("[data-id]");if(c)showDetail(c.getAttribute("data-id"));});\n'
 + 'document.getElementById("deviceGrid").addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){var c=e.target.closest("[data-id]");if(c){e.preventDefault();showDetail(c.getAttribute("data-id"));}}});\n'
++ 'document.getElementById("topologyView").addEventListener("click",function(e){var n=e.target.closest("[data-id]");if(n)showDetail(n.getAttribute("data-id"));});\n'
++ 'document.querySelectorAll("[data-view]").forEach(function(b){b.addEventListener("click",function(){setView(b.getAttribute("data-view"));});});\n'
 + 'document.getElementById("detailPanel").addEventListener("click",function(e){var n=e.target.closest("[data-detail-id]");if(n){showDetail(n.getAttribute("data-detail-id"));return;}if(e.target.closest("[data-action=close-detail]"))closeDetail();});\n'
 + 'document.getElementById("detailOverlay").addEventListener("click",function(e){if(e.target.id==="detailOverlay")closeDetail();});\n'
 + 'document.addEventListener("keydown",function(e){if(e.key==="Escape")closeDetail();});\n'
-+ 'renderStats();renderFilters();renderDevices();\n'
++ 'applyViewUI();renderStats();renderFilters();renderDevices();if(currentView==="topology")renderTopology();\n'
 + '<\/script>\n'
 + '</body>\n'
 + '</html>\n';
@@ -1870,7 +2189,19 @@ function handleImport(event) {
   event.target.value = '';
 }
 
-function refresh() { renderStats(); renderFilters(); renderDevices(); updateExportIndicator(); }
+function refresh() {
+  renderStats();
+  renderFilters();
+  renderDevices();
+  if (currentView === 'topology') renderTopology();
+  updateExportIndicator();
+}
+
+// Topology click delegation: open device detail when a node is clicked.
+document.getElementById('topologyView').addEventListener('click', (e) => {
+  const node = e.target.closest('[data-id]');
+  if (node) showDetail(node.getAttribute('data-id'));
+});
 
 // --- Unsaved-since-last-export indicator ---
 const LAST_EXPORT_KEY = 'homelab_last_export';
@@ -2043,6 +2374,7 @@ document.addEventListener('keydown', (e) => {
   if (document.getElementById('detailOverlay').classList.contains('open')) { closeDetail(); return; }
 });
 
+applyViewUI();
 refresh();
 </script>
 </body>
