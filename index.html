@@ -956,6 +956,8 @@ function saveDevices(devices) { localStorage.setItem(STORAGE_KEY, JSON.stringify
 function generateId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
 function getDevice(id, devices) { return (devices || loadDevices()).find(d => d.id === id); }
 function getChildren(parentId, devices) { return (devices || loadDevices()).filter(d => d.parentId === parentId).sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' })); }
+function sortedStorage(storage) { return Array.isArray(storage) ? storage.slice().sort((a, b) => (a.type || '').localeCompare(b.type || '', undefined, { sensitivity: 'base' })) : storage; }
+function sortedServices(services) { return (services || []).slice().sort((a, b) => { const an = typeof a === 'string' ? a : (a.name || ''); const bn = typeof b === 'string' ? b : (b.name || ''); return an.localeCompare(bn, undefined, { sensitivity: 'base' }); }); }
 
 function toast(message, type = 'success', action = null) {
   const container = document.getElementById('toastContainer');
@@ -1121,8 +1123,9 @@ function renderDevices() {
   grid.innerHTML = filtered.map(d => {
     const children = getChildren(d.id, devices);
     const parent = d.parentId ? getDevice(d.parentId, devices) : null;
-    const svcs = (d.services || []);
+    const svcs = sortedServices(d.services);
     const svcCount = svcs.length;
+    const storage = sortedStorage(d.storage);
 
     return `
     <div class="device-card ${children.length ? 'has-children' : ''}" tabindex="0" role="button" onclick="showDetail('${d.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showDetail('${d.id}');}">
@@ -1142,7 +1145,7 @@ function renderDevices() {
         ${d.os ? `<span class="meta-item"><strong>OS:</strong> ${esc(d.os)}</span>` : ''}
         ${d.cpu ? `<span class="meta-item"><strong>CPU:</strong> ${esc(d.cpu)}</span>` : ''}
         ${d.ram ? `<span class="meta-item"><strong>RAM:</strong> ${esc(d.ram)}</span>` : ''}
-        ${d.storage && (Array.isArray(d.storage) ? d.storage.length : d.storage) ? `<span class="meta-item"><strong>Storage:</strong> ${Array.isArray(d.storage) ? (d.storage.length > 2 ? esc(d.storage[0].size ? d.storage[0].type + ' ' + d.storage[0].size : d.storage[0].type) + ', +' + (d.storage.length - 1) + ' more' : d.storage.map(s => esc(s.size ? s.type + ' ' + s.size : s.type)).join(', ')) : esc(d.storage)}</span>` : ''}
+        ${storage && (Array.isArray(storage) ? storage.length : storage) ? `<span class="meta-item"><strong>Storage:</strong> ${Array.isArray(storage) ? (storage.length > 2 ? esc(storage[0].size ? storage[0].type + ' ' + storage[0].size : storage[0].type) + ', +' + (storage.length - 1) + ' more' : storage.map(s => esc(s.size ? s.type + ' ' + s.size : s.type)).join(', ')) : esc(storage)}</span>` : ''}
       </div>
       ${svcCount ? `
         <div class="device-services">
@@ -1573,30 +1576,30 @@ function showDetail(id) {
           <div><div class="detail-field-label">Location</div><div class="detail-field-value">${esc(d.location) || '—'}</div></div>
         </div>
       </div>
-      ${(Array.isArray(d.storage) && d.storage.length) || (!Array.isArray(d.storage) && d.storage) ? `
+      ${(Array.isArray(d.storage) && d.storage.length) || (!Array.isArray(d.storage) && d.storage) ? (() => { const storage = sortedStorage(d.storage); return `
         <div class="detail-section">
-          <div class="detail-section-title">Storage (${Array.isArray(d.storage) ? d.storage.length : 1})</div>
-          ${Array.isArray(d.storage) ? `
+          <div class="detail-section-title">Storage (${Array.isArray(storage) ? storage.length : 1})</div>
+          ${Array.isArray(storage) ? `
             <table class="service-table">
               <thead><tr><th>Type / Device</th><th>Size</th><th>Notes</th></tr></thead>
               <tbody>
-                ${d.storage.map(s => `<tr>
+                ${storage.map(s => `<tr>
                   <td>${esc(s.type)}</td>
                   <td>${esc(s.size) || '—'}</td>
                   <td class="svc-notes">${esc(s.notes || '—')}</td>
                 </tr>`).join('')}
               </tbody>
             </table>
-          ` : `<div class="detail-field-value">${esc(d.storage)}</div>`}
+          ` : `<div class="detail-field-value">${esc(storage)}</div>`}
         </div>
-      ` : ''}
-      ${d.services && d.services.length ? `
+      `; })() : ''}
+      ${d.services && d.services.length ? (() => { const services = sortedServices(d.services); return `
         <div class="detail-section">
-          <div class="detail-section-title">Services (${d.services.length})</div>
+          <div class="detail-section-title">Services (${services.length})</div>
           <table class="service-table">
             <thead><tr><th>Service</th><th>Port</th><th>Notes</th><th>URL</th></tr></thead>
             <tbody>
-              ${d.services.map(s => {
+              ${services.map(s => {
                 const sName = typeof s === 'string' ? s : s.name;
                 const sPort = typeof s === 'string' ? '' : s.port;
                 const sNotes = typeof s === 'string' ? '' : s.notes;
@@ -1611,7 +1614,7 @@ function showDetail(id) {
             </tbody>
           </table>
         </div>
-      ` : ''}
+      `; })() : ''}
       ${children.length ? `
         <div class="detail-section">
           <div class="detail-section-title">Running on this host (${children.length})</div>
@@ -1741,7 +1744,7 @@ function deviceToMarkdown(d, allDevices) {
     md += `\n## Storage\n\n`;
     md += `| Type / Device | Size | Notes |\n`;
     md += `|---------------|------|-------|\n`;
-    d.storage.forEach(s => {
+    sortedStorage(d.storage).forEach(s => {
       md += `| ${mdCell(s.type)} | ${mdCell(s.size)} | ${mdCell(s.notes)} |\n`;
     });
     md += `\n`;
@@ -1755,7 +1758,7 @@ function deviceToMarkdown(d, allDevices) {
     md += `\n## Services\n\n`;
     md += `| Service | Port | Notes | URL |\n`;
     md += `|---------|------|-------|-----|\n`;
-    d.services.forEach(s => {
+    sortedServices(d.services).forEach(s => {
       if (typeof s === 'string') { md += `| ${mdCell(s)} | — | — | — |\n`; }
       else { md += `| ${mdCell(s.name)} | ${mdCell(s.port)} | ${mdCell(s.notes)} | ${mdCell(s.url)} |\n`; }
     });
@@ -1927,7 +1930,7 @@ function deviceToPublicSection(d, allDevices) {
   }
 
   if (Array.isArray(d.storage) && d.storage.length) {
-    const rows = d.storage
+    const rows = sortedStorage(d.storage)
       .filter(s => s.type)
       .map(s => ({ type: sanitizePublic(s.type), size: s.size || '', notes: sanitizePublic(s.notes || '') }))
       .filter(s => s.type);
@@ -1938,7 +1941,7 @@ function deviceToPublicSection(d, allDevices) {
     }
   }
 
-  const services = (d.services || []).map(s => typeof s === 'string' ? { name: s, notes: '', url: '' } : s)
+  const services = sortedServices(d.services).map(s => typeof s === 'string' ? { name: s, notes: '', url: '' } : s)
     .map(s => ({ name: sanitizePublic(s.name || ''), notes: sanitizePublic(s.notes || '') }))
     .filter(s => s.name);
   if (services.length) {
@@ -2043,14 +2046,14 @@ function sanitizeDeviceForPublic(d) {
     os: sanitizePublic(d.os || ''),
     cpu: sanitizePublic(d.cpu || ''),
     ram: sanitizePublic(d.ram || ''),
-    storage: Array.isArray(d.storage) ? d.storage
+    storage: Array.isArray(d.storage) ? sortedStorage(d.storage)
       .filter(s => s && s.type)
       .map(s => ({
         type: sanitizePublic(s.type || ''),
         size: s.size || '',
         notes: sanitizePublic(s.notes || ''),
       })) : [],
-    services: (d.services || [])
+    services: sortedServices(d.services)
       .map(s => typeof s === 'string' ? { name: s, notes: '' } : { name: s.name || '', notes: s.notes || '' })
       .filter(s => s.name && s.name !== '—')
       .map(s => ({ name: sanitizePublic(s.name), notes: sanitizePublic(s.notes) })),
@@ -2214,6 +2217,8 @@ const PUBLIC_HTML_TEMPLATE = '<!DOCTYPE html>\n'
 + 'function typeBadge(type){var t=type||"other";return \'<span class="device-type-badge \'+getTypeClass(t)+\'">\'+getTypeIcon(t)+\'<span>\'+esc(t)+\'</span></span>\';}\n'
 + 'function getDevice(id){for(var i=0;i<DEVICES.length;i++)if(DEVICES[i].id===id)return DEVICES[i];return null;}\n'
 + 'function getChildren(parentId){return DEVICES.filter(function(d){return d.parentId===parentId;}).sort(function(a,b){return (a.name||"").localeCompare(b.name||"",undefined,{sensitivity:"base"});});}\n'
++ 'function sortedStorage(storage){return Array.isArray(storage)?storage.slice().sort(function(a,b){return (a.type||"").localeCompare(b.type||"",undefined,{sensitivity:"base"});}):storage;}\n'
++ 'function sortedServices(services){return (services||[]).slice().sort(function(a,b){var an=typeof a==="string"?a:(a.name||"");var bn=typeof b==="string"?b:(b.name||"");return an.localeCompare(bn,undefined,{sensitivity:"base"});});}\n'
 + 'function renderStats(){\n'
 + '  var hosts=DEVICES.filter(function(d){return !d.parentId;}).length;\n'
 + '  var vmsAndContainers=DEVICES.filter(function(d){return d.type==="vm"||d.type==="container";}).length;\n'
@@ -2263,8 +2268,8 @@ const PUBLIC_HTML_TEMPLATE = '<!DOCTYPE html>\n'
 + '  grid.innerHTML=filtered.map(function(d){\n'
 + '    var children=getChildren(d.id);\n'
 + '    var parent=d.parentId?getDevice(d.parentId):null;\n'
-+ '    var svcs=d.services||[];\n'
-+ '    var storage=d.storage||[];\n'
++ '    var svcs=sortedServices(d.services);\n'
++ '    var storage=sortedStorage(d.storage||[]);\n'
 + '    var storageHtml="";\n'
 + '    if(storage.length){\n'
 + '      var first=storage[0];\n'
@@ -2382,15 +2387,17 @@ const PUBLIC_HTML_TEMPLATE = '<!DOCTYPE html>\n'
 + '    \'</div></div>\';\n'
 + '  }\n'
 + '  if(d.storage&&d.storage.length){\n'
-+ '    html+=\'<div class="detail-section"><div class="detail-section-title">Storage (\'+d.storage.length+\')</div>\'+\n'
++ '    var sortedSt=sortedStorage(d.storage);\n'
++ '    html+=\'<div class="detail-section"><div class="detail-section-title">Storage (\'+sortedSt.length+\')</div>\'+\n'
 + '      \'<table class="service-table"><thead><tr><th>Type / Device</th><th>Size</th><th>Notes</th></tr></thead><tbody>\'+\n'
-+ '      d.storage.map(function(s){return \'<tr><td>\'+esc(s.type)+\'</td><td>\'+(esc(s.size)||"\\u2014")+\'</td><td class="svc-notes">\'+(esc(s.notes)||"\\u2014")+\'</td></tr>\';}).join("")+\n'
++ '      sortedSt.map(function(s){return \'<tr><td>\'+esc(s.type)+\'</td><td>\'+(esc(s.size)||"\\u2014")+\'</td><td class="svc-notes">\'+(esc(s.notes)||"\\u2014")+\'</td></tr>\';}).join("")+\n'
 + '      \'</tbody></table></div>\';\n'
 + '  }\n'
 + '  if(d.services&&d.services.length){\n'
-+ '    html+=\'<div class="detail-section"><div class="detail-section-title">Services (\'+d.services.length+\')</div>\'+\n'
++ '    var sortedSv=sortedServices(d.services);\n'
++ '    html+=\'<div class="detail-section"><div class="detail-section-title">Services (\'+sortedSv.length+\')</div>\'+\n'
 + '      \'<table class="service-table"><thead><tr><th>Service</th><th>Notes</th></tr></thead><tbody>\'+\n'
-+ '      d.services.map(function(s){return \'<tr><td>\'+esc(s.name)+\'</td><td class="svc-notes">\'+(esc(s.notes)||"\\u2014")+\'</td></tr>\';}).join("")+\n'
++ '      sortedSv.map(function(s){return \'<tr><td>\'+esc(s.name)+\'</td><td class="svc-notes">\'+(esc(s.notes)||"\\u2014")+\'</td></tr>\';}).join("")+\n'
 + '      \'</tbody></table></div>\';\n'
 + '  }\n'
 + '  if(children.length){\n'
