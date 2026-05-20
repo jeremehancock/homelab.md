@@ -448,20 +448,21 @@
     grid-template-columns: repeat(auto-fill, 280px);
     gap: 28px 24px;
     align-items: start;
-    justify-content: start;
+    justify-content: center;
   }
   .topo-cluster { overflow: visible; display: block; }
   .topo-cluster .topo-box {
     fill: var(--bg-card);
     stroke: var(--border);
     stroke-width: 1;
-    transition: stroke 0.15s, filter 0.15s;
+    transition: fill 0.15s, stroke 0.15s, filter 0.15s;
   }
   .topo-cluster .topo-node { cursor: pointer; }
   .topo-cluster .topo-node:hover .topo-box,
   .topo-cluster .topo-node:focus-visible .topo-box {
-    stroke: var(--accent);
-    filter: drop-shadow(0 0 4px rgba(57,197,187,0.35));
+    fill: var(--bg-tertiary);
+    stroke: var(--border-active);
+    filter: drop-shadow(0 0 8px rgba(57,197,187,0.35));
   }
   .topo-cluster .topo-node:focus { outline: none; }
   .topo-cluster .topo-text-name {
@@ -973,9 +974,11 @@ function topoBoxSvg(d, x, y, w, h, isParent, opts) {
   const nameY = y + h / 2 - 3;
   const typeY = y + h / 2 + 13;
   const nameMax = isParent ? 24 : 22;
+  const clipId = 'topo-clip-' + esc(d.id);
   return `<g class="topo-node" data-id="${esc(d.id)}">
+    <defs><clipPath id="${clipId}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6"/></clipPath></defs>
     <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" class="topo-box"/>
-    <rect x="${x}" y="${y}" width="3" height="${h}" class="topo-accent topo-accent-${d.type || 'other'}"/>
+    <rect x="${x}" y="${y}" width="3" height="${h}" class="topo-accent topo-accent-${d.type || 'other'}" clip-path="url(#${clipId})"/>
     ${showStatus ? `<circle cx="${dotX}" cy="${dotY}" r="4" class="topo-status status-${status}"/>` : ''}
     <text x="${textX}" y="${nameY}" class="topo-text-name">${esc(truncateLabel(d.name, nameMax))}</text>
     <text x="${textX}" y="${typeY}" class="topo-text-type">${esc((d.type || 'other').toUpperCase())}</text>
@@ -1846,11 +1849,11 @@ const PUBLIC_HTML_TEMPLATE = '<!DOCTYPE html>\n'
 + '.view-btn:hover{color:var(--text-primary);background:var(--bg-tertiary);}.view-btn.active{color:var(--accent);background:var(--accent-glow);}.view-btn+.view-btn{border-left:1px solid var(--border);}\n'
 + '.topology-view{display:none;}.topology-view.active{display:block;}\n'
 + '.topology-empty{text-align:center;padding:60px 20px;color:var(--text-muted);font-size:15px;}\n'
-+ '.topology-clusters{display:grid;grid-template-columns:repeat(auto-fill,280px);gap:28px 24px;align-items:start;justify-content:start;}\n'
++ '.topology-clusters{display:grid;grid-template-columns:repeat(auto-fill,280px);gap:28px 24px;align-items:start;justify-content:center;}\n'
 + '.topo-cluster{overflow:visible;display:block;}\n'
-+ '.topo-cluster .topo-box{fill:var(--bg-card);stroke:var(--border);stroke-width:1;transition:stroke 0.15s,filter 0.15s;}\n'
++ '.topo-cluster .topo-box{fill:var(--bg-card);stroke:var(--border);stroke-width:1;transition:fill 0.15s,stroke 0.15s,filter 0.15s;}\n'
 + '.topo-cluster .topo-node{cursor:pointer;}\n'
-+ '.topo-cluster .topo-node:hover .topo-box,.topo-cluster .topo-node:focus-visible .topo-box{stroke:var(--accent);filter:drop-shadow(0 0 4px rgba(57,197,187,0.35));}\n'
++ '.topo-cluster .topo-node:hover .topo-box,.topo-cluster .topo-node:focus-visible .topo-box{fill:var(--bg-tertiary);stroke:var(--border-active);filter:drop-shadow(0 0 8px rgba(57,197,187,0.35));}\n'
 + '.topo-cluster .topo-node:focus{outline:none;}\n'
 + '.topo-cluster .topo-text-name{font-family:\'JetBrains Mono\',monospace;font-size:14px;font-weight:600;fill:var(--text-primary);pointer-events:none;}\n'
 + '.topo-cluster .topo-text-type{font-family:\'JetBrains Mono\',monospace;font-size:10px;fill:var(--text-muted);letter-spacing:0.5px;pointer-events:none;}\n'
@@ -1966,9 +1969,11 @@ const PUBLIC_HTML_TEMPLATE = '<!DOCTYPE html>\n'
 + '  var nameY=y+h/2-3;\n'
 + '  var typeY=y+h/2+13;\n'
 + '  var nameMax=isParent?24:22;\n'
++ '  var clipId="topo-clip-"+esc(d.id);\n'
 + '  return \'<g class="topo-node" data-id="\'+esc(d.id)+\'">\'+\n'
++ '    \'<defs><clipPath id="\'+clipId+\'"><rect x="\'+x+\'" y="\'+y+\'" width="\'+w+\'" height="\'+h+\'" rx="6"/></clipPath></defs>\'+\n'
 + '    \'<rect x="\'+x+\'" y="\'+y+\'" width="\'+w+\'" height="\'+h+\'" rx="6" class="topo-box"/>\'+\n'
-+ '    \'<rect x="\'+x+\'" y="\'+y+\'" width="3" height="\'+h+\'" class="topo-accent topo-accent-\'+(d.type||"other")+\'"/>\'+\n'
++ '    \'<rect x="\'+x+\'" y="\'+y+\'" width="3" height="\'+h+\'" class="topo-accent topo-accent-\'+(d.type||"other")+\'" clip-path="url(#\'+clipId+\')"/>\'+\n'
 + '    \'<text x="\'+textX+\'" y="\'+nameY+\'" class="topo-text-name">\'+esc(truncateLabel(d.name,nameMax))+\'</text>\'+\n'
 + '    \'<text x="\'+textX+\'" y="\'+typeY+\'" class="topo-text-type">\'+esc((d.type||"other").toUpperCase())+\'</text>\'+\n'
 + '    \'<title>\'+esc(d.name)+(d.type?" (\'+esc(d.type)+\')":"")+\'</title>\'+\n'
