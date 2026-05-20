@@ -946,17 +946,26 @@ function renderDevices() {
 }
 
 // --- Topology view ---
-let currentView = 'grid';
+const VIEW_KEY = 'homelab_view';
+let currentView = (function () {
+  try { return localStorage.getItem(VIEW_KEY) || 'grid'; }
+  catch (_) { return 'grid'; }
+})();
 
-function setView(v) {
-  currentView = v;
+function applyViewUI() {
   document.querySelectorAll('[data-view]').forEach(btn => {
-    const active = btn.dataset.view === v;
+    const active = btn.dataset.view === currentView;
     btn.classList.toggle('active', active);
     btn.setAttribute('aria-selected', active ? 'true' : 'false');
   });
-  document.getElementById('deviceGrid').style.display = v === 'grid' ? '' : 'none';
-  document.getElementById('topologyView').classList.toggle('active', v === 'topology');
+  document.getElementById('deviceGrid').style.display = currentView === 'grid' ? '' : 'none';
+  document.getElementById('topologyView').classList.toggle('active', currentView === 'topology');
+}
+
+function setView(v) {
+  currentView = v;
+  try { localStorage.setItem(VIEW_KEY, v); } catch (_) {}
+  applyViewUI();
   if (v === 'topology') renderTopology();
 }
 
@@ -1040,12 +1049,10 @@ function renderTopology() {
   });
   orphans.forEach(o => clusters.push({ parent: o, children: [] }));
 
-  // Parents-with-children first, then alpha.
-  clusters.sort((a, b) => {
-    if (a.children.length && !b.children.length) return -1;
-    if (!a.children.length && b.children.length) return 1;
-    return (a.parent.name || '').localeCompare(b.parent.name || '', undefined, { sensitivity: 'base' });
-  });
+  // Alphabetical by parent name.
+  clusters.sort((a, b) =>
+    (a.parent.name || '').localeCompare(b.parent.name || '', undefined, { sensitivity: 'base' })
+  );
 
   container.innerHTML = `<div class="topology-clusters">${clusters.map(c => topologyClusterSvg(c.parent, c.children, { showStatus: true })).join('')}</div>`;
 }
@@ -2009,19 +2016,21 @@ const PUBLIC_HTML_TEMPLATE = '<!DOCTYPE html>\n'
 + '  var clusters=[];\n'
 + '  roots.forEach(function(p){clusters.push({parent:p,children:filtered.filter(function(c){return c.parentId===p.id;})});});\n'
 + '  orphans.forEach(function(o){clusters.push({parent:o,children:[]});});\n'
-+ '  clusters.sort(function(a,b){\n'
-+ '    if(a.children.length&&!b.children.length)return -1;\n'
-+ '    if(!a.children.length&&b.children.length)return 1;\n'
-+ '    return (a.parent.name||"").localeCompare(b.parent.name||"",undefined,{sensitivity:"base"});\n'
-+ '  });\n'
++ '  clusters.sort(function(a,b){return (a.parent.name||"").localeCompare(b.parent.name||"",undefined,{sensitivity:"base"});});\n'
 + '  container.innerHTML=\'<div class="topology-clusters">\'+clusters.map(function(c){return topologyClusterSvg(c.parent,c.children);}).join("")+\'</div>\';\n'
++ '}\n'
++ 'var VIEW_KEY="homelab_view";\n'
++ 'try{var savedView=localStorage.getItem(VIEW_KEY);if(savedView==="topology"||savedView==="grid")currentView=savedView;}catch(_){}\n'
++ 'function applyViewUI(){\n'
++ '  var btns=document.querySelectorAll("[data-view]");\n'
++ '  for(var i=0;i<btns.length;i++){var active=btns[i].getAttribute("data-view")===currentView;btns[i].classList.toggle("active",active);btns[i].setAttribute("aria-selected",active?"true":"false");}\n'
++ '  document.getElementById("deviceGrid").style.display=currentView==="grid"?"":"none";\n'
++ '  document.getElementById("topologyView").classList.toggle("active",currentView==="topology");\n'
 + '}\n'
 + 'function setView(v){\n'
 + '  currentView=v;\n'
-+ '  var btns=document.querySelectorAll("[data-view]");\n'
-+ '  for(var i=0;i<btns.length;i++){var active=btns[i].getAttribute("data-view")===v;btns[i].classList.toggle("active",active);btns[i].setAttribute("aria-selected",active?"true":"false");}\n'
-+ '  document.getElementById("deviceGrid").style.display=v==="grid"?"":"none";\n'
-+ '  document.getElementById("topologyView").classList.toggle("active",v==="topology");\n'
++ '  try{localStorage.setItem(VIEW_KEY,v);}catch(_){}\n'
++ '  applyViewUI();\n'
 + '  if(v==="topology")renderTopology();\n'
 + '}\n'
 + 'function showDetail(id){\n'
@@ -2088,7 +2097,7 @@ const PUBLIC_HTML_TEMPLATE = '<!DOCTYPE html>\n'
 + 'document.getElementById("detailPanel").addEventListener("click",function(e){var n=e.target.closest("[data-detail-id]");if(n){showDetail(n.getAttribute("data-detail-id"));return;}if(e.target.closest("[data-action=close-detail]"))closeDetail();});\n'
 + 'document.getElementById("detailOverlay").addEventListener("click",function(e){if(e.target.id==="detailOverlay")closeDetail();});\n'
 + 'document.addEventListener("keydown",function(e){if(e.key==="Escape")closeDetail();});\n'
-+ 'renderStats();renderFilters();renderDevices();\n'
++ 'applyViewUI();renderStats();renderFilters();renderDevices();if(currentView==="topology")renderTopology();\n'
 + '<\/script>\n'
 + '</body>\n'
 + '</html>\n';
@@ -2352,6 +2361,7 @@ document.addEventListener('keydown', (e) => {
   if (document.getElementById('detailOverlay').classList.contains('open')) { closeDetail(); return; }
 });
 
+applyViewUI();
 refresh();
 </script>
 </body>
